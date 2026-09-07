@@ -6,16 +6,121 @@ import streamlit as st
 
 st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="centered")
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS UNTUK TAMPILAN KEREN & MODERN ---
 st.markdown("""
     <style>
-    .stApp { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; }
-    .question-box { background-color: white; padding: 25px; border-radius: 15px; text-align: center; font-size: 24px; font-weight: bold; color: #222; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-    .role-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.3); margin-bottom: 20px; }
-    .climb-box { background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; border: 2px solid #ffd700; }
-    .rank-card { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); padding: 12px 20px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid #ffd700; font-size: 18px; }
-    .my-rank { background: rgba(255, 215, 0, 0.3) !important; border: 2px solid #ffd700 !important; font-weight: bold; }
-    .waiting-box { background: rgba(255, 255, 255, 0.1); border: 2px dashed #ffd700; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; }
+    /* Google Fonts Import */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+    html, body, [class*="css"]  {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Background Utama dengan Efek Gradient Bergerak */
+    .stApp {
+        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        color: #ffffff;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Card Glassmorphism Efek Kaca Transparan */
+    .role-card {
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 25px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: transform 0.3s ease;
+    }
+    .role-card:hover {
+        transform: translateY(-5px);
+        border-color: #ffd700;
+    }
+
+    /* Kotak Pertanyaan Kuis */
+    .question-box {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 26px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.05);
+        border: 3px solid #38bdf8;
+    }
+
+    /* Kotak Info Ketinggian Gunung */
+    .climb-box {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 25px;
+        border: 2px solid #f59e0b;
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        color: #fbbf24;
+    }
+
+    /* Kartu Peringkat (Leaderboard) */
+    .rank-card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        padding: 15px 25px;
+        border-radius: 15px;
+        margin-bottom: 12px;
+        border-left: 8px solid #38bdf8;
+        font-size: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .my-rank {
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.1) 100%) !important;
+        border-left: 8px solid #fbbf24 !important;
+        border: 2px solid #fbbf24;
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+    }
+
+    /* Kotak Ruang Tunggu */
+    .waiting-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px dashed #f59e0b;
+        padding: 35px;
+        border-radius: 20px;
+        text-align: center;
+        margin-top: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Kustomisasi Tombol Streamlit */
+    .stButton>button {
+        border-radius: 14px !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        padding: 12px 24px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }
+    .stButton>button:hover {
+        transform: scale(1.03) !important;
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -97,21 +202,21 @@ if st.session_state.user_role is None:
         if os.path.exists("logo.png"):
             st.image("logo.png", use_container_width=True)
         else:
-            st.markdown("<h1 style='text-align: center; color: white;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; color: #38bdf8; font-size: 42px; font-weight: 800;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
             
-    st.markdown("<p style='text-align: center; color: #f0f0f0;'>Pilih peran kamu untuk melanjutkan:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Game Kuis Interaktif & Petualangan Mendaki Gunung</p>", unsafe_allow_html=True)
     st.write("")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, edit soal, kontrol game, dan pantau Leaderboard.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p style='color:#94a3b8;'>Kelola soal, kontrol jalannya permainan, dan pantau klasemen juara.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
 
     with col2:
-        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Pilih Karakter, masukkan Kode PIN dari Pengembang, dan mainkan game!</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p style='color:#94a3b8;'>Pilih avatar jagoanmu, masukkan PIN, dan raih puncak gunung!</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pemain", use_container_width=True):
             st.session_state.user_role = "PLAYER"
             st.rerun()
@@ -327,7 +432,6 @@ elif st.session_state.user_role == "PLAYER":
 
         st.write("### 🧙‍♂️ Pilih Karakter Kamu:")
         
-        # Pilihan Avatar Karakter
         avatars = [
             "🧗‍♂️ Pendaki Expert", "🧙‍♂️ Penyihir", "🥷 Ninja", 
             "🧑‍🚀 Astronaut", "🤠 Koboi", "🦁 Singa Berani", 
@@ -342,7 +446,7 @@ elif st.session_state.user_role == "PLAYER":
                 if input_nama.strip():
                     st.session_state.active_pin = input_pin
                     st.session_state.player_name = input_nama.strip()
-                    st.session_state.player_avatar = selected_avatar.split()[0]  # Ambil emojinya saja
+                    st.session_state.player_avatar = selected_avatar.split()[0]
                     st.session_state.current_q = 0
                     st.session_state.score = 0
                     st.session_state.altitude = 0
@@ -372,9 +476,9 @@ elif st.session_state.user_role == "PLAYER":
 
         st.markdown(f"""
             <div class='waiting-box'>
-                <h2>⏳ MENUNGGU PENGEMBANG...</h2>
-                <p>Halo <b>{st.session_state.player_avatar} {st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
-                <p>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b> di layar pengembang.</p>
+                <h2 style='color:#fbbf24;'>⏳ MENUNGGU PENGEMBANG...</h2>
+                <p style='font-size:18px;'>Halo <b>{st.session_state.player_avatar} {st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
+                <p style='color:#94a3b8;'>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b> di layar pengembang.</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -450,11 +554,11 @@ elif st.session_state.user_role == "PLAYER":
         mode = active_rooms[pin]["mode"] if pin in active_rooms else "Kuis"
         
         if "Mendaki" in mode:
-            st.markdown("<h1 style='text-align: center; color: white;'>🏔️ PENDAKIAN SELESAI! 🏆</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: white;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; color: #fbbf24;'>🏔️ PENDAKIAN SELESAI! 🏆</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
         else:
-            st.markdown("<h1 style='text-align: center; color: white;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: white;'>Kerja Bagus, {st.session_state.player_avatar} {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; color: #38bdf8;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Kerja Bagus, {st.session_state.player_avatar} {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
 
         st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
 
@@ -480,13 +584,15 @@ elif st.session_state.user_role == "PLAYER":
                     my_rank = idx
                     st.markdown(f"""
                         <div class='rank-card my-rank'>
-                            <b>{icon} {avatar} {p_name} (KAMU)</b> — {p_info['score']} Poin ({p_info['altitude']}m) ✨
+                            <b>{icon} {avatar} {p_name} (KAMU)</b> 
+                            <span><b>{p_info['score']} Poin</b> ({p_info['altitude']}m) ✨</span>
                         </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
                         <div class='rank-card'>
-                            <b>{icon} {avatar} {p_name}</b> — {p_info['score']} Poin ({p_info['altitude']}m)
+                            <b>{icon} {avatar} {p_name}</b> 
+                            <span><b>{p_info['score']} Poin</b> ({p_info['altitude']}m)</span>
                         </div>
                     """, unsafe_allow_html=True)
 
