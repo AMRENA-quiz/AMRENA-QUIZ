@@ -232,12 +232,19 @@ def update_user_coins_and_skins(username, earned_coins, new_skin=None):
     if username in users:
         if "coins" not in users[username]:
             users[username]["coins"] = 0
+            
+        # Pengecekan otomatis: Pastikan semua akun lama/baru punya 3 skin gratis ini
+        default_skins = [
+            "🏔️ Penjelajah Gunung Standard", 
+            "🥾 Pendaki Pemula Cepat", 
+            "🧭 Ahli Kompas Alam"
+        ]
         if "skins" not in users[username]:
-            users[username]["skins"] = [
-                "🏔️ Penjelajah Gunung Standard", 
-                "🥾 Pendaki Pemula Cepat", 
-                "🧭 Ahli Kompas Alam"
-            ]
+            users[username]["skins"] = default_skins
+        else:
+            for skin in default_skins:
+                if skin not in users[username]["skins"]:
+                    users[username]["skins"].insert(0, skin)
         
         users[username]["coins"] += earned_coins
         if new_skin and new_skin not in users[username]["skins"]:
@@ -294,6 +301,9 @@ if "last_ranks" not in st.session_state:
 # ==========================================
 if st.session_state.logged_user:
     users_data = get_users()
+    
+    # Otomatis pastikan akun yang sedang login punya 3 skin gratis
+    update_user_coins_and_skins(st.session_state.logged_user, 0)
     user_info = users_data.get(st.session_state.logged_user, {})
     total_coins = user_info.get("coins", 0)
     
@@ -347,7 +357,7 @@ if st.session_state.logged_user is None:
                 else:
                     users[clean_name] = {
                         "registered": True,
-                        "coins": 300,  # Modal awal koin diperbanyak!
+                        "coins": 300,  # Modal awal koin
                         "skins": [
                             "🏔️ Penjelajah Gunung Standard", 
                             "🥾 Pendaki Pemula Cepat", 
@@ -477,7 +487,11 @@ else:
             input_pin = st.text_input("Masukkan Kode PIN Game:", max_chars=6, key="p_pin")
 
             users_data = get_users()
-            user_skins = users_data.get(st.session_state.logged_user, {}).get("skins", ["🏔️ Penjelajah Gunung Standard"])
+            user_skins = users_data.get(st.session_state.logged_user, {}).get("skins", [
+                "🏔️ Penjelajah Gunung Standard", 
+                "🥾 Pendaki Pemula Cepat", 
+                "🧭 Ahli Kompas Alam"
+            ])
 
             st.write("### 🧙‍♂️ Pilih Skin Karakter Kamu:")
             selected_avatar = st.selectbox("Pilih Skin yang Ingin Digunakan:", user_skins, key="p_avatar")
