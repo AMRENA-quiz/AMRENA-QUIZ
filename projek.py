@@ -40,12 +40,13 @@ def save_room(pin, data):
     rooms[pin] = data
     save_all_rooms(rooms)
 
-def submit_score(pin, player_name, score, altitude):
+def submit_score(pin, player_name, avatar, score, altitude):
     rooms = get_rooms()
     if pin in rooms:
         if "players" not in rooms[pin]:
             rooms[pin]["players"] = {}
         rooms[pin]["players"][player_name] = {
+            "avatar": avatar,
             "score": score,
             "altitude": altitude
         }
@@ -104,13 +105,13 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, edit soal yang ada, kontrol game, dan pantau Leaderboard.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, edit soal, kontrol game, dan pantau Leaderboard.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
 
     with col2:
-        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan tunggu hingga game dimulai.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Pilih Karakter, masukkan Kode PIN dari Pengembang, dan mainkan game!</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pemain", use_container_width=True):
             st.session_state.user_role = "PLAYER"
             st.rerun()
@@ -171,18 +172,20 @@ elif st.session_state.user_role == "DEV":
                 st.subheader("🥇 LEADERBOARD PERINGKAT")
                 podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
                 for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
-                    st.success(f"**{podium_icons[idx]}**: **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
+                    av = p_info.get("avatar", "🧑‍🚀")
+                    st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
 
                 if len(sorted_players) > 3:
                     st.subheader("📋 Pemain Lainnya:")
                     for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
-                        st.write(f"**#{idx} {p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
+                        av = p_info.get("avatar", "🧑‍🚀")
+                        st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
             else:
                 st.info("Belum ada pemain yang menyelesaikan kuis ini.")
         else:
             st.warning("Belum ada Kuis yang diterbitkan.")
 
-    # --- TAB 2: EDIT & TAMBAH SOAL DARI KUIS YANG SUDAH ADA ---
+    # --- TAB 2: EDIT & TAMBAH SOAL ---
     with tab2:
         st.subheader("✏️ Edit & Tambah Soal Kuis")
         all_rooms = get_rooms()
@@ -193,7 +196,6 @@ elif st.session_state.user_role == "DEV":
 
             st.info(f"Kuis **PIN {edit_pin}** saat ini punya **{len(soal_list)} soal**.")
 
-            # Form Tambah Soal Baru ke PIN ini
             with st.expander("➕ Tambah Soal Baru ke Kuis Ini"):
                 with st.form("form_tambah_soal_pin"):
                     new_q = st.text_input("Pertanyaan Baru:")
@@ -220,7 +222,6 @@ elif st.session_state.user_role == "DEV":
             st.divider()
             st.write("### 📝 Daftar Soal Saat Ini:")
 
-            # Menampilkan & Mengedit Soal yang Sudah Ada
             for idx, item in enumerate(soal_list):
                 with st.expander(f"Soal #{idx+1}: {item['question']}"):
                     with st.form(key=f"edit_form_{edit_pin}_{idx}"):
@@ -230,7 +231,6 @@ elif st.session_state.user_role == "DEV":
                         eo3 = st.text_input("Pilihan 3:", value=item["options"][2])
                         eo4 = st.text_input("Pilihan 4:", value=item["options"][3])
 
-                        # Cari indeks jawaban benar saat ini
                         try:
                             curr_ans_idx = item["options"].index(item["answer"])
                         except ValueError:
@@ -318,11 +318,23 @@ elif st.session_state.user_role == "PLAYER":
         st.session_state.game_state = "LOBBY"
         st.rerun()
 
-    # LAYAR 1: INPUT PIN & NAMA
+    # LAYAR 1: INPUT PIN, NAMA, DAN PILIH KARAKTER
     if st.session_state.game_state == "LOBBY":
         st.title("🎯 Masuk ke Game Kuis")
+        
         input_pin = st.text_input("Masukkan Kode PIN Game:", max_chars=6)
         input_nama = st.text_input("Masukkan Nama Kamu:")
+
+        st.write("### 🧙‍♂️ Pilih Karakter Kamu:")
+        
+        # Pilihan Avatar Karakter
+        avatars = [
+            "🧗‍♂️ Pendaki Expert", "🧙‍♂️ Penyihir", "🥷 Ninja", 
+            "🧑‍🚀 Astronaut", "🤠 Koboi", "🦁 Singa Berani", 
+            "🤖 Robot Super", "🦸‍♂️ Super Hero"
+        ]
+        
+        selected_avatar = st.selectbox("Pilih Avatar Karakter:", avatars)
 
         if st.button("🚀 MASUK RUANG TUNGGU", type="primary"):
             active_rooms = get_rooms()
@@ -330,6 +342,7 @@ elif st.session_state.user_role == "PLAYER":
                 if input_nama.strip():
                     st.session_state.active_pin = input_pin
                     st.session_state.player_name = input_nama.strip()
+                    st.session_state.player_avatar = selected_avatar.split()[0]  # Ambil emojinya saja
                     st.session_state.current_q = 0
                     st.session_state.score = 0
                     st.session_state.altitude = 0
@@ -360,7 +373,7 @@ elif st.session_state.user_role == "PLAYER":
         st.markdown(f"""
             <div class='waiting-box'>
                 <h2>⏳ MENUNGGU PENGEMBANG...</h2>
-                <p>Halo <b>{st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
+                <p>Halo <b>{st.session_state.player_avatar} {st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
                 <p>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b> di layar pengembang.</p>
             </div>
         """, unsafe_allow_html=True)
@@ -385,13 +398,13 @@ elif st.session_state.user_role == "PLAYER":
         q_idx = st.session_state.current_q
         q_data = soal_list[q_idx]
 
-        st.caption(f"Pemain: **{st.session_state.player_name}** | Mode: **{mode}** | Kode PIN: **{pin}**")
+        st.caption(f"Karakter: **{st.session_state.player_avatar} {st.session_state.player_name}** | Mode: **{mode}** | PIN: **{pin}**")
         
         if "Mendaki" in mode:
             progress = (q_idx) / len(soal_list)
             st.markdown(f"""
                 <div class='climb-box'>
-                    🏕️ Ketinggian Pendakian: <b>{st.session_state.altitude} Meter</b> dari Puncak 🏔️
+                    🏕️ Ketinggian {st.session_state.player_avatar}: <b>{st.session_state.altitude} Meter</b> dari Puncak 🏔️
                 </div>
             """, unsafe_allow_html=True)
             st.progress(progress, text=f"Progres Menuju Puncak Gunung ({q_idx}/{len(soal_list)} Soal)")
@@ -425,7 +438,7 @@ elif st.session_state.user_role == "PLAYER":
                 st.session_state.current_q += 1
                 st.rerun()
             else:
-                submit_score(pin, st.session_state.player_name, st.session_state.score, st.session_state.altitude)
+                submit_score(pin, st.session_state.player_name, st.session_state.player_avatar, st.session_state.score, st.session_state.altitude)
                 st.session_state.game_state = "RESULT"
                 st.rerun()
 
@@ -438,10 +451,10 @@ elif st.session_state.user_role == "PLAYER":
         
         if "Mendaki" in mode:
             st.markdown("<h1 style='text-align: center; color: white;'>🏔️ PENDAKIAN SELESAI! 🏆</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: white;'>Selamat {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: white;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
         else:
             st.markdown("<h1 style='text-align: center; color: white;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: white;'>Kerja Bagus, {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: white;'>Kerja Bagus, {st.session_state.player_avatar} {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
 
         st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
 
@@ -461,18 +474,19 @@ elif st.session_state.user_role == "PLAYER":
             for idx, (p_name, p_info) in enumerate(sorted_players, start=1):
                 icon = medals[idx-1] if idx <= 3 else f"#{idx}"
                 is_me = (p_name == st.session_state.player_name)
+                avatar = p_info.get("avatar", "🧑‍🚀")
                 
                 if is_me:
                     my_rank = idx
                     st.markdown(f"""
                         <div class='rank-card my-rank'>
-                            <b>{icon} {p_name} (KAMU)</b> — {p_info['score']} Poin ({p_info['altitude']}m) ✨
+                            <b>{icon} {avatar} {p_name} (KAMU)</b> — {p_info['score']} Poin ({p_info['altitude']}m) ✨
                         </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
                         <div class='rank-card'>
-                            <b>{icon} {p_name}</b> — {p_info['score']} Poin ({p_info['altitude']}m)
+                            <b>{icon} {avatar} {p_name}</b> — {p_info['score']} Poin ({p_info['altitude']}m)
                         </div>
                     """, unsafe_allow_html=True)
 
