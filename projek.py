@@ -6,9 +6,9 @@ import time
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="QUIZ'ARN", page_icon="💡", layout="wide")
+st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="wide")
 
-# --- CUSTOM CSS MODERN DENGAN HEADER KANAN ATAS ---
+# --- CUSTOM CSS DENGAN BACKGROUND ANIMASI KEREN & MODERN ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
@@ -17,9 +17,18 @@ st.markdown("""
         font-family: 'Poppins', sans-serif;
     }
 
+    /* BACKGROUND ANIMASI GRADASI BERGERAK (TIDAK MEMBOSANKAN) */
     .stApp {
-        background-color: #1e3a8a;
+        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #1e3a8a);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
         color: #ffffff;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
 
     /* KUSTOM HEADER KANAN ATAS (USER INFO) */
@@ -28,10 +37,12 @@ st.markdown("""
         justify-content: flex-end;
         align-items: center;
         gap: 15px;
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
         padding: 10px 20px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         margin-bottom: 20px;
     }
 
@@ -67,10 +78,11 @@ st.markdown("""
         font-size: 15px !important;
     }
 
-    /* STYLING KARTU PILIHAN PERAN */
+    /* STYLING KARTU PILIHAN PERAN DENGAN EFEK GLOW */
     .role-card {
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.3);
         border-radius: 16px;
         padding: 30px 24px;
         text-align: center;
@@ -79,6 +91,14 @@ st.markdown("""
         flex-direction: column;
         justify-content: space-between;
         margin-bottom: 15px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-5px);
+        border-color: #38bdf8;
+        box-shadow: 0 12px 40px rgba(56, 189, 248, 0.2);
     }
 
     .role-title {
@@ -90,17 +110,17 @@ st.markdown("""
 
     .role-desc {
         font-size: 14px;
-        color: #e2e8f0;
+        color: #cbd5e1;
         line-height: 1.5;
     }
 
     .auth-card {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.75);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 258, 0.18);
+        border: 1px solid rgba(56, 189, 248, 0.3);
         padding: 30px;
         border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         margin: auto;
         max-width: 500px;
     }
@@ -114,12 +134,13 @@ st.markdown("""
         font-weight: 800;
         color: #0f172a;
         margin-bottom: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
         border: 3px solid #38bdf8;
     }
 
     .climb-box {
         background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(10px);
         padding: 20px;
         border-radius: 20px;
         text-align: center;
@@ -128,14 +149,19 @@ st.markdown("""
         margin-bottom: 25px;
         border: 2px solid #f59e0b;
         color: #fbbf24;
+        box-shadow: 0 5px 20px rgba(245, 158, 11, 0.2);
     }
 
     .rank-card {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(8px);
         padding: 15px 25px;
         border-radius: 15px;
         margin-bottom: 12px;
         border-left: 8px solid #38bdf8;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
         font-size: 18px;
         display: flex;
         justify-content: space-between;
@@ -143,13 +169,14 @@ st.markdown("""
     }
 
     .my-rank {
-        background: rgba(245, 158, 11, 0.25) !important;
+        background: rgba(245, 158, 11, 0.2) !important;
         border-left: 8px solid #fbbf24 !important;
         border: 2px solid #fbbf24;
     }
 
     .waiting-box {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
         border: 2px dashed #f59e0b;
         padding: 35px;
         border-radius: 20px;
@@ -160,6 +187,11 @@ st.markdown("""
     .stButton>button {
         border-radius: 12px !important;
         font-weight: 700 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        transform: scale(1.02);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -201,7 +233,7 @@ def update_user_coins_and_skins(username, earned_coins, new_skin=None):
         if "coins" not in users[username]:
             users[username]["coins"] = 0
         if "skins" not in users[username]:
-            users[username]["skins"] = ["🧗‍♂️ Pendaki Standard"]
+            users[username]["skins"] = ["🏔️ Penjelajah Gunung Standard"]
         
         users[username]["coins"] += earned_coins
         if new_skin and new_skin not in users[username]["skins"]:
@@ -261,7 +293,6 @@ if st.session_state.logged_user:
     user_info = users_data.get(st.session_state.logged_user, {})
     total_coins = user_info.get("coins", 0)
     
-    # Render di pojok kanan atas
     st.markdown(f"""
         <div class='top-bar-container'>
             <span class='user-badge'>👤 {st.session_state.logged_user}</span>
@@ -273,7 +304,7 @@ if st.session_state.logged_user:
 # MODUL 1: AUTHENTICATION (LOGIN & REGISTER)
 # ==========================================
 if st.session_state.logged_user is None:
-    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
     col_a, col_b, col_c = st.columns([1, 2, 1])
@@ -312,21 +343,20 @@ if st.session_state.logged_user is None:
                 else:
                     users[clean_name] = {
                         "registered": True,
-                        "coins": 100,  # Bonus koin pendaftaran awal!
-                        "skins": ["🧗‍♂️ Pendaki Standard"]
+                        "coins": 100,
+                        "skins": ["🏔️ Penjelajah Gunung Standard"]
                     }
                     save_users(users)
-                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+100 Koin Bonus Pendaftaran)! Silakan Login.")
+                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+100 Koin Bonus)! Silakan Login.")
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN LEGEND
 # ==========================================
 elif st.session_state.selected_role is None:
-    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; margin-top:10px;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; margin-top:10px; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #e2e8f0; font-size: 18px; margin-bottom: 30px;'>Pilih peran kamu atau kunjungi Toko Skin:</p>", unsafe_allow_html=True)
 
-    # Menu Pilihan (Peran / Toko Skin)
     main_menu_tab1, main_menu_tab2 = st.tabs(["🎮 Pilih Peran Game", "🛒 Toko Skin Legend"])
 
     with main_menu_tab1:
@@ -367,11 +397,10 @@ elif st.session_state.selected_role is None:
         my_coins = current_user_data.get("coins", 0)
         my_skins = current_user_data.get("skins", [])
 
-        # Daftar Skin Legend yang bisa dibeli
         legend_shop = {
-            "🔥 Raja Naga Api Legend": {"price": 2000, "desc": "Skin naga legendaris dengan aura api abadi."},
-            "⚡ Dewa Petir Zeus": {"price": 1500, "desc": "Karakter petir super cepat penakluk puncak."},
-            "👑 Ksatria Berlian Emas": {"price": 1000, "desc": "Armor emas berkilau lambang juara sejati."},
+            "🏔️ Pendaki Gunung Everest": {"price": 2000, "desc": "Penakluk puncak tertinggi di dunia bersalju abadi."},
+            "⚡ Dewa Petir Zeus": {"price": 1500, "desc": "Karakter petir super cepat penakluk rintangan."},
+            "👑 Ksatria Naga Emas": {"price": 1000, "desc": "Armor naga emas berkilau lambang juara sejati."},
             "🌌 Pengelana Luar Angkasa": {"price": 800, "desc": "Astronot penjelajah galaksi tak terbatas."}
         }
 
@@ -381,7 +410,7 @@ elif st.session_state.selected_role is None:
             with target_col:
                 owned = skin_name in my_skins
                 st.markdown(f"""
-                    <div style='background: rgba(255,255,255,0.08); padding: 20px; border-radius: 14px; border: 1px solid #38bdf8; margin-bottom: 15px;'>
+                    <div style='background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); padding: 20px; border-radius: 14px; border: 1px solid rgba(56,189,248,0.3); margin-bottom: 15px;'>
                         <h3>{skin_name}</h3>
                         <p style='color: #cbd5e1; font-size: 13px;'>{skin_info['desc']}</p>
                         <p style='color: #fbbf24; font-weight: 700;'>Harga: 🪙 {skin_info['price']} Poin</p>
@@ -393,7 +422,6 @@ elif st.session_state.selected_role is None:
                 else:
                     if st.button(f"Tukar dengan Skin Ini", key=f"buy_{idx}"):
                         if my_coins >= skin_info['price']:
-                            # Potong koin dan tambahkan skin
                             users_data[st.session_state.logged_user]["coins"] -= skin_info['price']
                             if "skins" not in users_data[st.session_state.logged_user]:
                                 users_data[st.session_state.logged_user]["skins"] = []
@@ -440,9 +468,8 @@ else:
             
             input_pin = st.text_input("Masukkan Kode PIN Game:", max_chars=6, key="p_pin")
 
-            # Ambil skin yang sudah dimiliki user untuk pilihan avatar
             users_data = get_users()
-            user_skins = users_data.get(st.session_state.logged_user, {}).get("skins", ["🧗‍♂️ Pendaki Standard"])
+            user_skins = users_data.get(st.session_state.logged_user, {}).get("skins", ["🏔️ Penjelajah Gunung Standard"])
 
             st.write("### 🧙‍♂️ Pilih Skin Karakter Kamu:")
             selected_avatar = st.selectbox("Pilih Skin yang Ingin Digunakan:", user_skins, key="p_avatar")
@@ -505,14 +532,14 @@ else:
 
             st.caption(f"Karakter: **{st.session_state.player_avatar} {st.session_state.player_name}** | Mode: **{mode}** | PIN: **{pin}**")
             
-            if "Mendaki" in mode:
+            if "Gunung" in mode or "Mendaki" in mode:
                 progress = (q_idx) / len(soal_list)
                 st.markdown(f"""
                     <div class='climb-box'>
-                        🏕️ Ketinggian {st.session_state.player_avatar}: <b>{st.session_state.altitude} Meter</b> dari Puncak 🏔️
+                        ⛰️ Ketinggian {st.session_state.player_avatar}: <b>{st.session_state.altitude} Meter</b> Menuju Puncak 🌟
                     </div>
                 """, unsafe_allow_html=True)
-                st.progress(progress, text=f"Progres Menuju Puncak Gunung ({q_idx}/{len(soal_list)} Soal)")
+                st.progress(progress, text=f"Progres Pendakian Gunung ({q_idx}/{len(soal_list)} Soal)")
 
             st.markdown(f"<div class='question-box'>{q_data['question']}</div>", unsafe_allow_html=True)
 
@@ -535,7 +562,7 @@ else:
                 if user_choice == q_data["answer"]:
                     st.session_state.score += 1000
                     st.session_state.altitude += 500
-                    st.success("✨ BENAR! Kamu makin dekat ke puncak gunung! (+500m)")
+                    st.success("🏔️ BENAR! Kamu makin dekat ke puncak! (+500m)")
                 else:
                     st.error(f"❌ SALAH! Jawaban benar: {q_data['answer']}")
 
@@ -545,7 +572,6 @@ else:
                     st.session_state.current_q += 1
                     st.rerun()
                 else:
-                    # Update koin ke database akun pengguna (misal: 10% dari skor game dikonversi jadi koin)
                     earned_coins_from_game = st.session_state.score // 10
                     update_user_coins_and_skins(st.session_state.logged_user, earned_coins_from_game)
                     st.session_state.game_state = "RESULT"
@@ -555,13 +581,9 @@ else:
             st.balloons()
             pin = st.session_state.active_pin
             active_rooms = get_rooms()
-            mode = active_rooms[pin]["mode"] if pin in active_rooms else "Kuis"
             
-            if "Mendaki" in mode:
-                st.markdown("<h1 style='text-align: center; color: #fbbf24;'>🏔️ PENDAKIAN SELESAI! 🏆</h1>", unsafe_allow_html=True)
-                st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
-            else:
-                st.markdown("<h1 style='text-align: center; color: #38bdf8;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; color: #fbbf24;'>🏔️ PENDAKIAN GUNUNG SELESAI! 🏆</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai puncak setinggi {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
 
             st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
             st.info(f"🎁 Selamat! Kamu mendapatkan tambahan koin akun dari sesi ini!")
@@ -577,7 +599,7 @@ else:
                 for idx, (p_name, p_info) in enumerate(sorted_players, start=1):
                     icon = medals[idx-1] if idx <= 3 else f"#{idx}"
                     is_me = (p_name == st.session_state.player_name)
-                    avatar = p_info.get("avatar", "🧑‍🚀")
+                    avatar = p_info.get("avatar", "🏔️")
                     
                     if is_me:
                         st.markdown(f"""
@@ -672,13 +694,13 @@ else:
                             podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
                             
                             for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
-                                av = p_info.get("avatar", "🧑‍🚀")
+                                av = p_info.get("avatar", "🏔️")
                                 st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
 
                             if len(sorted_players) > 3:
                                 st.subheader("📋 Pemain Lainnya:")
                                 for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
-                                    av = p_info.get("avatar", "🧑‍🚀")
+                                    av = p_info.get("avatar", "🏔️")
                                     st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
                         else:
                             st.info("Belum ada pemain yang masuk/menyelesaikan kuis ini.")
