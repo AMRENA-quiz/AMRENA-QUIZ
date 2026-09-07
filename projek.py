@@ -197,7 +197,7 @@ if "last_ranks" not in st.session_state:
     st.session_state.last_ranks = {}
 
 # ==========================================
-# MODUL AUTHENTICATION (MASUK / DAFTAR HANYA NAMA)
+# MODUL AUTHENTICATION (LOGIN & DAFTAR TERPISAH)
 # ==========================================
 if st.session_state.logged_user is None:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -207,7 +207,7 @@ if st.session_state.logged_user is None:
         else:
             st.markdown("<h1 style='text-align: center; color: #38bdf8; font-size: 42px; font-weight: 800;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
             
-    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Masukkan Nama Kamu untuk Masuk ke Dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Silakan Daftar Akun Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
     auth_tab1, auth_tab2 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru"])
 
@@ -220,15 +220,17 @@ if st.session_state.logged_user is None:
         if st.button("🚀 MASUK KE DASHBOARD", type="primary", key="btn_login_submit"):
             users = get_users()
             clean_name = login_username.strip()
-            if clean_name in users:
+            if not clean_name:
+                st.error("Masukkan nama kamu terlebih dahulu!")
+            elif clean_name in users:
                 st.session_state.logged_user = clean_name
                 st.success(f"Selamat datang kembali, {clean_name}!")
                 st.rerun()
             else:
-                st.error("Nama belum terdaftar! Silakan pindah ke Tab 'Daftar Nama Baru'.")
+                st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu di tab 'Daftar Nama Baru'.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # TAB DAFTAR
+    # TAB DAFTAR (HANYA PENDAFTARAN - TIDAK LANGSUNG MASUK)
     with auth_tab2:
         st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
         st.subheader("Daftar Akun Baru")
@@ -240,13 +242,11 @@ if st.session_state.logged_user is None:
             if not clean_name:
                 st.error("Nama tidak boleh kosong!")
             elif clean_name in users:
-                st.error("Nama sudah terdaftar! Gunakan nama lain atau langsung login.")
+                st.warning("Nama ini sudah terdaftar! Silakan langsung login di tab 'Masuk (Login)'.")
             else:
                 users[clean_name] = {"registered": True}
                 save_users(users)
-                st.session_state.logged_user = clean_name
-                st.success(f"🎉 Akun '{clean_name}' berhasil dibuat!")
-                st.rerun()
+                st.success(f"🎉 Nama '{clean_name}' berhasil didaftarkan! Silakan pindah ke Tab 'Masuk (Login)' untuk masuk ke dashboard.")
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
