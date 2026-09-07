@@ -6,28 +6,20 @@ import time
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="centered")
+st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="wide")
 
-# --- CUSTOM CSS MODERN & TEKS KONTRAS ---
+# --- CUSTOM CSS MODERN BERSAMA KARTU PEMILIHAN PERAN ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
-    html, body, [class*="css"]  {
+    html, body, [class*="css"] {
         font-family: 'Poppins', sans-serif;
     }
 
     .stApp {
-        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a);
-        background-size: 400% 400%;
-        animation: gradientBG 15s ease infinite;
+        background-color: #1e3a8a;
         color: #ffffff;
-    }
-
-    @keyframes gradientBG {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
     }
 
     /* TEKS INPUT DAN DROPDOWN JELAS DAN KONTRAS */
@@ -46,14 +38,31 @@ st.markdown("""
         font-size: 15px !important;
     }
 
-    /* STYLING TAB */
-    .stTabs [data-baseweb="tab-list"] button {
-        color: #94a3b8 !important;
-        font-weight: 700 !important;
+    /* STYLING KARTU PILIHAN PERAN */
+    .role-card {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 16px;
+        padding: 30px 24px;
+        text-align: center;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-bottom: 15px;
     }
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-        color: #38bdf8 !important;
-        border-bottom-color: #38bdf8 !important;
+
+    .role-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        color: #ffffff;
+    }
+
+    .role-desc {
+        font-size: 14px;
+        color: #e2e8f0;
+        line-height: 1.5;
     }
 
     .auth-card {
@@ -63,7 +72,8 @@ st.markdown("""
         padding: 30px;
         border-radius: 20px;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        margin-bottom: 20px;
+        margin: auto;
+        max-width: 500px;
     }
 
     .question-box {
@@ -102,6 +112,7 @@ st.markdown("""
         justify-content: space-between;
         align-items: center;
     }
+
     .my-rank {
         background: rgba(245, 158, 11, 0.25) !important;
         border-left: 8px solid #fbbf24 !important;
@@ -190,6 +201,9 @@ def submit_score(pin, player_name, avatar, score, altitude):
 if "logged_user" not in st.session_state:
     st.session_state.logged_user = None
 
+if "selected_role" not in st.session_state:
+    st.session_state.selected_role = None
+
 if "game_state" not in st.session_state:
     st.session_state.game_state = "LOBBY"
 
@@ -197,81 +211,121 @@ if "last_ranks" not in st.session_state:
     st.session_state.last_ranks = {}
 
 # ==========================================
-# MODUL AUTHENTICATION (LOGIN & DAFTAR TERPISAH)
+# MODUL 1: AUTHENTICATION (LOGIN & REGISTER)
 # ==========================================
 if st.session_state.logged_user is None:
-    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
-    with col_l2:
-        if os.path.exists("logo.png"):
-            st.image("logo.png", use_container_width=True)
-        else:
-            st.markdown("<h1 style='text-align: center; color: #38bdf8; font-size: 42px; font-weight: 800;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
-            
-    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Silakan Daftar Akun Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
-    auth_tab1, auth_tab2 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru"])
+    col_a, col_b, col_c = st.columns([1, 2, 1])
+    with col_b:
+        auth_tab1, auth_tab2 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru"])
 
-    # TAB LOGIN
-    with auth_tab1:
-        st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-        st.subheader("Masuk dengan Nama Terdaftar")
-        login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
-        
-        if st.button("🚀 MASUK KE DASHBOARD", type="primary", key="btn_login_submit"):
-            users = get_users()
-            clean_name = login_username.strip()
-            if not clean_name:
-                st.error("Masukkan nama kamu terlebih dahulu!")
-            elif clean_name in users:
-                st.session_state.logged_user = clean_name
-                st.success(f"Selamat datang kembali, {clean_name}!")
-                st.rerun()
-            else:
-                st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu di tab 'Daftar Nama Baru'.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        # TAB LOGIN
+        with auth_tab1:
+            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            st.subheader("Masuk dengan Nama Terdaftar")
+            login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
+            
+            if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
+                users = get_users()
+                clean_name = login_username.strip()
+                if not clean_name:
+                    st.error("Masukkan nama kamu terlebih dahulu!")
+                elif clean_name in users:
+                    st.session_state.logged_user = clean_name
+                    st.rerun()
+                else:
+                    st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu di tab 'Daftar Nama Baru'.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    # TAB DAFTAR (HANYA PENDAFTARAN - TIDAK LANGSUNG MASUK)
-    with auth_tab2:
-        st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-        st.subheader("Daftar Akun Baru")
-        reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
+        # TAB DAFTAR
+        with auth_tab2:
+            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            st.subheader("Daftar Akun Baru")
+            reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
 
-        if st.button("➕ DAFTAR AKUN", key="btn_reg_submit"):
-            users = get_users()
-            clean_name = reg_username.strip()
-            if not clean_name:
-                st.error("Nama tidak boleh kosong!")
-            elif clean_name in users:
-                st.warning("Nama ini sudah terdaftar! Silakan langsung login di tab 'Masuk (Login)'.")
-            else:
-                users[clean_name] = {"registered": True}
-                save_users(users)
-                st.success(f"🎉 Nama '{clean_name}' berhasil didaftarkan! Silakan pindah ke Tab 'Masuk (Login)' untuk masuk ke dashboard.")
-        st.markdown("</div>", unsafe_allow_html=True)
+            if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
+                users = get_users()
+                clean_name = reg_username.strip()
+                if not clean_name:
+                    st.error("Nama tidak boleh kosong!")
+                elif clean_name in users:
+                    st.warning("Nama ini sudah terdaftar! Silakan langsung login di tab 'Masuk (Login)'.")
+                else:
+                    users[clean_name] = {"registered": True}
+                    save_users(users)
+                    st.success(f"🎉 Nama '{clean_name}' berhasil didaftarkan! Silakan pindah ke Tab 'Masuk (Login)'.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# MODUL UTAMA: DASHBOARD TERPADU
+# MODUL 2: PILIH PERAN (TAMPILAN DUA KARTU)
+# ==========================================
+elif st.session_state.selected_role is None:
+    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; margin-top:20px;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #e2e8f0; font-size: 18px; margin-bottom: 40px;'>Pilih peran kamu untuk melanjutkan:</p>", unsafe_allow_html=True)
+
+    c_left, c_mid1, c_mid2, c_right = st.columns([1, 4, 4, 1])
+
+    # KARTU 1: PENGEMBANG (HOST)
+    with c_mid1:
+        st.markdown("""
+            <div class='role-card'>
+                <div>
+                    <div class='role-title'>🧑‍💻 Pengembang (Host)</div>
+                    <div class='role-desc'>Buat soal, kontrol kapan game dimulai, dan pantau Peringkat Juara (Leaderboard).</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Masuk sebagai Pengembang", key="btn_role_host", use_container_width=True):
+            st.session_state.selected_role = "HOST"
+            st.rerun()
+
+    # KARTU 2: ANGGOTA (PEMAIN)
+    with c_mid2:
+        st.markdown("""
+            <div class='role-card'>
+                <div>
+                    <div class='role-title'>🎮 Anggota (Pemain)</div>
+                    <div class='role-desc'>Masukkan Kode PIN dari Pengembang dan tunggu hingga Pengembang memulai game.</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Masuk sebagai Pemain", key="btn_role_player", use_container_width=True):
+            st.session_state.selected_role = "PLAYER"
+            st.rerun()
+
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    col_out1, col_out2, col_out3 = st.columns([4, 2, 4])
+    with col_out2:
+        if st.button("🚪 Keluar / Logout Akun", use_container_width=True):
+            st.session_state.logged_user = None
+            st.session_state.selected_role = None
+            st.session_state.game_state = "LOBBY"
+            st.rerun()
+
+# ==========================================
+# MODUL 3: DASHBOARD ISI SESUAI PERAN
 # ==========================================
 else:
-    st.sidebar.title(f"👤 Akun: {st.session_state.logged_user}")
-    st.sidebar.markdown("---")
+    st.sidebar.title(f"👤 {st.session_state.logged_user}")
+    st.sidebar.write(f"Peran Aktif: **{'Pengembang' if st.session_state.selected_role == 'HOST' else 'Pemain'}**")
     
-    # Navigasi Menu Bebas Pilih Peran
-    app_mode = st.sidebar.radio(
-        "📌 Pilih Mode Akses:",
-        ["🎮 Main Kuis (Pemain)", "🛠️ Control Room (Pengembang)"]
-    )
-    
-    st.sidebar.markdown("---")
+    if st.sidebar.button("🔄 Ganti Peran"):
+        st.session_state.selected_role = None
+        st.session_state.game_state = "LOBBY"
+        st.rerun()
+
     if st.sidebar.button("🚪 Keluar / Logout"):
         st.session_state.logged_user = None
+        st.session_state.selected_role = None
         st.session_state.game_state = "LOBBY"
         st.rerun()
 
     # ------------------------------------------
-    # PERAN 1: PEMAIN (MAIN KUIS VIA PIN)
+    # MODUL PEMAIN
     # ------------------------------------------
-    if app_mode == "🎮 Main Kuis (Pemain)":
+    if st.session_state.selected_role == "PLAYER":
         if st.session_state.game_state == "LOBBY":
             st.title("🎯 Masuk ke Game Kuis")
             
@@ -433,9 +487,9 @@ else:
                 st.rerun()
 
     # ------------------------------------------
-    # PERAN 2: PENGEMBANG (MEMBUAT & MENGELOLA KUIS)
+    # MODUL PENGEMBANG (HOST)
     # ------------------------------------------
-    elif app_mode == "🛠️ Control Room (Pengembang)":
+    elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
         tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit / Hapus Kuis Saya", "➕ Buat Kuis Baru"])
@@ -445,7 +499,6 @@ else:
             st.subheader("📡 Live Leaderboard & Kontrol Game")
             all_rooms = get_rooms()
             
-            # Kuis Terkunci: Hanya kuis milik pengguna ini saja
             my_rooms = {k: v for k, v in all_rooms.items() if v.get("owner") == st.session_state.logged_user}
 
             if my_rooms:
@@ -678,7 +731,7 @@ else:
                     kode_pin = ''.join(random.choices(string.digits, k=6))
                     
                     room_data = {
-                        "owner": st.session_state.logged_user, # Menyimpan Pemilik Kuis
+                        "owner": st.session_state.logged_user,
                         "status": "WAITING",
                         "mode": mode_game,
                         "soal": list(st.session_state.draft_soal),
@@ -688,4 +741,3 @@ else:
 
                     st.session_state.draft_soal = []
                     st.success(f"🎉 Game Berhasil Diterbitkan!\n\n🔑 BAGIKAN KODE PIN INI KE PEMAIN: **{kode_pin}**")
-            
