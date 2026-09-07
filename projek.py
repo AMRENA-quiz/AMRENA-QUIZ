@@ -2,21 +2,21 @@ import random
 import string
 import json
 import os
+import time
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="centered")
 
 # --- CUSTOM CSS UNTUK TAMPILAN KEREN & MODERN ---
 st.markdown("""
     <style>
-    /* Google Fonts Import */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
     html, body, [class*="css"]  {
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Background Utama dengan Efek Gradient Bergerak */
     .stApp {
         background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a);
         background-size: 400% 400%;
@@ -30,7 +30,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* Card Glassmorphism Efek Kaca Transparan */
     .role-card {
         background: rgba(255, 255, 255, 0.07);
         backdrop-filter: blur(16px);
@@ -47,7 +46,6 @@ st.markdown("""
         border-color: #ffd700;
     }
 
-    /* Kotak Pertanyaan Kuis */
     .question-box {
         background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
         padding: 30px;
@@ -57,11 +55,10 @@ st.markdown("""
         font-weight: 800;
         color: #0f172a;
         margin-bottom: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.05);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         border: 3px solid #38bdf8;
     }
 
-    /* Kotak Info Ketinggian Gunung */
     .climb-box {
         background: rgba(15, 23, 42, 0.75);
         backdrop-filter: blur(10px);
@@ -76,7 +73,6 @@ st.markdown("""
         color: #fbbf24;
     }
 
-    /* Kartu Peringkat (Leaderboard) */
     .rank-card {
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(10px);
@@ -97,7 +93,6 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
     }
 
-    /* Kotak Ruang Tunggu */
     .waiting-box {
         background: rgba(255, 255, 255, 0.05);
         border: 2px dashed #f59e0b;
@@ -108,7 +103,6 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
 
-    /* Kustomisasi Tombol Streamlit */
     .stButton>button {
         border-radius: 14px !important;
         font-weight: 700 !important;
@@ -124,7 +118,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SISTEM DATABASE PENYIMPANAN SERVER (JSON) ---
+# --- FUNKSI BERSUARA (TEXT-TO-SPEECH) ---
+def speak(text):
+    if text:
+        js_code = f"""
+        <script>
+            var msg = new SpeechSynthesisUtterance("{text}");
+            msg.lang = "id-ID";
+            msg.rate = 1.0;
+            window.speechSynthesis.speak(msg);
+        </script>
+        """
+        components.html(js_code, height=0)
+
+# --- DATABASE PENYIMPANAN SERVER (JSON) ---
 DB_FILE = "rooms_db.json"
 
 def get_rooms():
@@ -157,7 +164,6 @@ def submit_score(pin, player_name, avatar, score, altitude):
         }
         save_all_rooms(rooms)
 
-# Preset Soal bawaan (PIN: 123456)
 DEFAULT_ROOMS = {
     "123456": {
         "status": "WAITING",
@@ -186,12 +192,15 @@ DEFAULT_ROOMS = {
 if not os.path.exists(DB_FILE):
     save_all_rooms(DEFAULT_ROOMS)
 
-# Inisialisasi Session State
+# Inisialisasi State Peringkat
 if "user_role" not in st.session_state:
     st.session_state.user_role = None
 
 if "game_state" not in st.session_state:
     st.session_state.game_state = "LOBBY"
+
+if "last_ranks" not in st.session_state:
+    st.session_state.last_ranks = {}
 
 # ==========================================
 # HALAMAN UTAMA: PILIH PERAN
@@ -210,7 +219,7 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p style='color:#94a3b8;'>Kelola soal, kontrol jalannya permainan, dan pantau klasemen juara.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p style='color:#94a3b8;'>Kelola soal, kontrol jalannya permainan, dan pantau klasemen live.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
@@ -232,17 +241,16 @@ elif st.session_state.user_role == "DEV":
 
     st.title("🛠️ Control Room Pengembang")
 
-    tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Pantau Game", "✏️ Kelola & Edit Soal", "➕ Buat Kuis Baru"])
+    tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit Soal", "➕ Buat Kuis Baru"])
 
-    # --- TAB 1: KONTROL GAME ---
+    # --- TAB 1: KONTROL GAME & LIVE LEADERBOARD WITH TTS ---
     with tab1:
-        st.subheader("📡 Kontrol Real-Time Game")
+        st.subheader("📡 Live Leaderboard & Kontrol Game")
         all_rooms = get_rooms()
         if all_rooms:
             selected_pin = st.selectbox("Pilih Kode PIN Game:", list(all_rooms.keys()), key="select_pin_tab1")
             
             room = all_rooms[selected_pin]
-            players_data = room.get("players", {})
             current_status = room.get("status", "WAITING")
 
             st.write(f"Status Game PIN **{selected_pin}**: **{'🟢 BERJALAN' if current_status == 'STARTED' else '🟡 MENUNGGU DIMULAI'}**")
@@ -261,32 +269,67 @@ elif st.session_state.user_role == "DEV":
                     st.warning("Game dikembalikan ke Ruang Tunggu.")
                     st.rerun()
             with c_btn3:
-                if st.button("🔄 Refresh Data Pemain", use_container_width=True):
-                    st.rerun()
+                is_live = st.checkbox("🔴 Aktifkan Live Mode & Suara", value=True)
 
             st.divider()
 
-            col_a, col_b = st.columns(2)
-            col_a.metric("Jumlah Pemain Terdata", len(players_data))
-            col_b.metric("Total Soal Dalam Game", len(room.get("soal", [])))
+            # Kontainer Papan Peringkat Live
+            board = st.empty()
 
-            st.divider()
+            def update_leaderboard_live():
+                rooms_now = get_rooms()
+                r_data = rooms_now.get(selected_pin, {})
+                players_data = r_data.get("players", {})
 
-            if players_data:
-                sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
-                st.subheader("🥇 LEADERBOARD PERINGKAT")
-                podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
-                for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
-                    av = p_info.get("avatar", "🧑‍🚀")
-                    st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
+                with board.container():
+                    if players_data:
+                        sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
+                        current_ranks = {p_name: idx + 1 for idx, (p_name, _) in enumerate(sorted_players)}
+                        
+                        announcement = ""
+                        # Cek Perubahan Posisi untuk Narasi Suara
+                        for p_name, new_rank in current_ranks.items():
+                            if p_name in st.session_state.last_ranks:
+                                old_rank = st.session_state.last_ranks[p_name]
+                                if new_rank < old_rank:
+                                    passed = old_rank - new_rank
+                                    if new_rank == 1:
+                                        announcement = f"Luar biasa! {p_name} memimpin di posisi pertama!"
+                                    else:
+                                        announcement = f"{p_name} menyusul {passed} pemain dan menempati posisi ke {new_rank}!"
+                                    break
+                            else:
+                                if new_rank == 1:
+                                    announcement = f"{p_name} memimpin di posisi pertama!"
 
-                if len(sorted_players) > 3:
-                    st.subheader("📋 Pemain Lainnya:")
-                    for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
-                        av = p_info.get("avatar", "🧑‍🚀")
-                        st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
-            else:
-                st.info("Belum ada pemain yang menyelesaikan kuis ini.")
+                        st.session_state.last_ranks = current_ranks
+
+                        if announcement and is_live:
+                            speak(announcement)
+                            st.toast(f"🔊 Narator: {announcement}")
+
+                        st.subheader("🥇 LEADERBOARD REAL-TIME")
+                        podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
+                        
+                        for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
+                            av = p_info.get("avatar", "🧑‍🚀")
+                            st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
+
+                        if len(sorted_players) > 3:
+                            st.subheader("📋 Pemain Lainnya:")
+                            for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
+                                av = p_info.get("avatar", "🧑‍🚀")
+                                st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
+                    else:
+                        st.info("Belum ada pemain yang masuk/menyelesaikan kuis.")
+
+            update_leaderboard_live()
+
+            # Loop Live Refresh setiap 3 Detik
+            if is_live:
+                time.sleep(3)
+                st.rerun()
+
         else:
             st.warning("Belum ada Kuis yang diterbitkan.")
 
@@ -423,7 +466,7 @@ elif st.session_state.user_role == "PLAYER":
         st.session_state.game_state = "LOBBY"
         st.rerun()
 
-    # LAYAR 1: INPUT PIN, NAMA, DAN PILIH KARAKTER
+    # LAYAR 1: INPUT PIN
     if st.session_state.game_state == "LOBBY":
         st.title("🎯 Masuk ke Game Kuis")
         
@@ -431,13 +474,11 @@ elif st.session_state.user_role == "PLAYER":
         input_nama = st.text_input("Masukkan Nama Kamu:")
 
         st.write("### 🧙‍♂️ Pilih Karakter Kamu:")
-        
         avatars = [
             "🧗‍♂️ Pendaki Expert", "🧙‍♂️ Penyihir", "🥷 Ninja", 
             "🧑‍🚀 Astronaut", "🤠 Koboi", "🦁 Singa Berani", 
             "🤖 Robot Super", "🦸‍♂️ Super Hero"
         ]
-        
         selected_avatar = st.selectbox("Pilih Avatar Karakter:", avatars)
 
         if st.button("🚀 MASUK RUANG TUNGGU", type="primary"):
@@ -455,7 +496,7 @@ elif st.session_state.user_role == "PLAYER":
                 else:
                     st.warning("Nama tidak boleh kosong!")
             else:
-                st.error("Kode PIN tidak ditemukan! Periksa kembali PIN kamu.")
+                st.error("Kode PIN tidak ditemukan!")
 
     # LAYAR 2: RUANG TUNGGU
     elif st.session_state.game_state == "WAITING_ROOM":
@@ -478,13 +519,12 @@ elif st.session_state.user_role == "PLAYER":
             <div class='waiting-box'>
                 <h2 style='color:#fbbf24;'>⏳ MENUNGGU PENGEMBANG...</h2>
                 <p style='font-size:18px;'>Halo <b>{st.session_state.player_avatar} {st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
-                <p style='color:#94a3b8;'>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b> di layar pengembang.</p>
+                <p style='color:#94a3b8;'>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b>.</p>
             </div>
         """, unsafe_allow_html=True)
         
-        st.write("")
-        if st.button("🔄 Cek Apakah Game Sudah Dimulai"):
-            st.rerun()
+        time.sleep(2)
+        st.rerun()
 
     # LAYAR 3: PENGERJAAN QUIZ
     elif st.session_state.game_state == "PLAYING":
@@ -538,15 +578,17 @@ elif st.session_state.user_role == "PLAYER":
             else:
                 st.error(f"❌ SALAH! Jawaban benar: {q_data['answer']}")
 
+            # Update Skor Langsung ke Server Server Real-Time
+            submit_score(pin, st.session_state.player_name, st.session_state.player_avatar, st.session_state.score, st.session_state.altitude)
+
             if q_idx + 1 < len(soal_list):
                 st.session_state.current_q += 1
                 st.rerun()
             else:
-                submit_score(pin, st.session_state.player_name, st.session_state.player_avatar, st.session_state.score, st.session_state.altitude)
                 st.session_state.game_state = "RESULT"
                 st.rerun()
 
-    # LAYAR 4: HASIL & PERINGKAT PEMAIN
+    # LAYAR 4: HASIL & LEADERBOARD
     elif st.session_state.game_state == "RESULT":
         st.balloons()
         pin = st.session_state.active_pin
@@ -558,30 +600,23 @@ elif st.session_state.user_role == "PLAYER":
             st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Selamat {st.session_state.player_avatar} {st.session_state.player_name}, kamu berhasil mencapai ketinggian {st.session_state.altitude} Meter!</h3>", unsafe_allow_html=True)
         else:
             st.markdown("<h1 style='text-align: center; color: #38bdf8;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: #f1f5f9;'>Kerja Bagus, {st.session_state.player_avatar} {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
 
         st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
 
         st.divider()
         st.subheader("🏆 PAPAN PERINGKAT PEMAIN (LEADERBOARD)")
-        
-        if st.button("🔄 Perbarui Peringkat"):
-            st.rerun()
 
         if pin in active_rooms and "players" in active_rooms[pin]:
             players = active_rooms[pin]["players"]
             sorted_players = sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)
             
             medals = ["🥇", "🥈", "🥉"]
-            my_rank = None
-
             for idx, (p_name, p_info) in enumerate(sorted_players, start=1):
                 icon = medals[idx-1] if idx <= 3 else f"#{idx}"
                 is_me = (p_name == st.session_state.player_name)
                 avatar = p_info.get("avatar", "🧑‍🚀")
                 
                 if is_me:
-                    my_rank = idx
                     st.markdown(f"""
                         <div class='rank-card my-rank'>
                             <b>{icon} {avatar} {p_name} (KAMU)</b> 
@@ -596,8 +631,9 @@ elif st.session_state.user_role == "PLAYER":
                         </div>
                     """, unsafe_allow_html=True)
 
-            if my_rank:
-                st.info(f"🎯 Posisi Kamu Saat Ini: **Peringkat ke-{my_rank}** dari **{len(sorted_players)} Pemain**")
+        if st.button("🔄 Main Lagi", key="btn_play_again"):
+            st.session_state.game_state = "LOBBY"
+            st.rerun()
 
         if st.button("🔄 Main Lagi", key="btn_play_again"):
             st.session_state.game_state = "LOBBY"
