@@ -16,10 +16,6 @@ st.markdown("""
     .rank-card { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); padding: 12px 20px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid #ffd700; font-size: 18px; }
     .my-rank { background: rgba(255, 215, 0, 0.3) !important; border: 2px solid #ffd700 !important; font-weight: bold; }
     .waiting-box { background: rgba(255, 255, 255, 0.1); border: 2px dashed #ffd700; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; }
-    div[key="btn_0"] > button { background-color: #e21b3c !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
-    div[key="btn_1"] > button { background-color: #1368ce !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
-    div[key="btn_2"] > button { background-color: #d89e00 !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
-    div[key="btn_3"] > button { background-color: #26890c !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -325,15 +321,15 @@ elif st.session_state.user_role == "PLAYER":
         user_choice = None
 
         with col1:
-            if st.button(f"🔺 {q_data['options'][0]}", key="btn_0", use_container_width=True):
+            if st.button(f"🔺 {q_data['options'][0]}", key="btn_q_0", use_container_width=True):
                 user_choice = q_data['options'][0]
-            if st.button(f"🔷 {q_data['options'][1]}", key="btn_1", use_container_width=True):
+            if st.button(f"🔷 {q_data['options'][1]}", key="btn_q_1", use_container_width=True):
                 user_choice = q_data['options'][1]
 
         with col2:
-            if st.button(f"🟡 {q_data['options'][2]}", key="btn_2", use_container_width=True):
+            if st.button(f"🟡 {q_data['options'][2]}", key="btn_q_2", use_container_width=True):
                 user_choice = q_data['options'][2]
-            if st.button(f"🟩 {q_data['options'][3]}", key="btn_3", use_container_width=True):
+            if st.button(f"🟩 {q_data['options'][3]}", key="btn_q_3", use_container_width=True):
                 user_choice = q_data['options'][3]
 
         if user_choice:
@@ -402,11 +398,7 @@ elif st.session_state.user_role == "PLAYER":
             if my_rank:
                 st.info(f"🎯 Posisi Kamu Saat Ini: **Peringkat ke-{my_rank}** dari **{len(sorted_players)} Pemain**")
 
-        if st.button("🔄 Main Lagi"):
-            st.session_state.game_state = "LOBBY"
-            st.rerun()
-
-        if st.button("🔄 Main Lagi"):
+        if st.button("🔄 Main Lagi", key="btn_play_again"):
             st.session_state.game_state = "LOBBY"
             st.rerun()
             
