@@ -5,6 +5,8 @@ import os
 import time
 import streamlit as st
 import streamlit.components.v1 as components
+import qrcode
+from io import BytesIO
 
 st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="wide")
 
@@ -17,7 +19,6 @@ st.markdown("""
         font-family: 'Poppins', sans-serif;
     }
 
-    /* BACKGROUND ANIMASI GRADASI BERGERAK (TIDAK MEMBOSANKAN) */
     .stApp {
         background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #1e3a8a);
         background-size: 400% 400%;
@@ -31,7 +32,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* KUSTOM HEADER KANAN ATAS (USER INFO) */
     .top-bar-container {
         display: flex;
         justify-content: flex-end;
@@ -62,7 +62,6 @@ st.markdown("""
         font-size: 14px;
     }
 
-    /* TEKS INPUT DAN DROPDOWN */
     .stTextInput input, .stSelectbox div[data-baseweb="select"] {
         background-color: rgba(15, 23, 42, 0.9) !important;
         color: #ffffff !important;
@@ -78,7 +77,6 @@ st.markdown("""
         font-size: 15px !important;
     }
 
-    /* STYLING KARTU PILIHAN PERAN DENGAN EFEK GLOW */
     .role-card {
         background: rgba(255, 255, 255, 0.07);
         backdrop-filter: blur(12px);
@@ -209,11 +207,20 @@ def speak(text):
         """
         components.html(js_code, height=0)
 
+# --- FUNGSI GENERATE QR CODE ---
+def generate_qr_code(url):
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    return buffered.getvalue()
+
 # --- DATABASE PENYIMPANAN SERVER (JSON) ---
 USERS_FILE = "users_db.json"
 ROOMS_FILE = "rooms_db.json"
 
-# --- HELPER AKUN USERS ---
 def get_users():
     if not os.path.exists(USERS_FILE):
         return {}
@@ -233,7 +240,6 @@ def update_user_coins_and_skins(username, earned_coins, new_skin=None):
         if "coins" not in users[username]:
             users[username]["coins"] = 0
             
-        # Pengecekan otomatis: Pastikan semua akun lama/baru punya 3 skin gratis ini
         default_skins = [
             "🏔️ Penjelajah Gunung Standard", 
             "🥾 Pendaki Pemula Cepat", 
@@ -252,7 +258,6 @@ def update_user_coins_and_skins(username, earned_coins, new_skin=None):
             
         save_users(users)
 
-# --- HELPER KUIS ROOMS ---
 def get_rooms():
     if not os.path.exists(ROOMS_FILE):
         return {}
@@ -296,13 +301,14 @@ if "game_state" not in st.session_state:
 if "last_ranks" not in st.session_state:
     st.session_state.last_ranks = {}
 
+if "newly_created_pin" not in st.session_state:
+    st.session_state.newly_created_pin = None
+
 # ==========================================
 # HEADER KANAN ATAS (JIKA SUDAH LOGIN)
 # ==========================================
 if st.session_state.logged_user:
     users_data = get_users()
-    
-    # Otomatis pastikan akun yang sedang login punya 3 skin gratis
     update_user_coins_and_skins(st.session_state.logged_user, 0)
     user_info = users_data.get(st.session_state.logged_user, {})
     total_coins = user_info.get("coins", 0)
@@ -315,7 +321,7 @@ if st.session_state.logged_user:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# MODUL 1: AUTHENTICATION (LOGIN & REGISTER)
+# MODUL 1: AUTHENTICATION
 # ==========================================
 if st.session_state.logged_user is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
@@ -357,19 +363,19 @@ if st.session_state.logged_user is None:
                 else:
                     users[clean_name] = {
                         "registered": True,
-                        "coins": 300,  # Modal awal koin
+                        "coins": 300,
                         "skins": [
                             "🏔️ Penjelajah Gunung Standard", 
                             "🥾 Pendaki Pemula Cepat", 
                             "🧭 Ahli Kompas Alam"
-                        ]  # Langsung dapat 3 skin gratis!
+                        ]
                     }
                     save_users(users)
                     st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# MODUL 2: PILIH PERAN & TOKO SKIN LEGEND
+# MODUL 2: PILIH PERAN & TOKO SKIN
 # ==========================================
 elif st.session_state.selected_role is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; margin-top:10px; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
@@ -469,12 +475,14 @@ else:
     if st.sidebar.button("🔄 Ganti Peran / Menu Toko"):
         st.session_state.selected_role = None
         st.session_state.game_state = "LOBBY"
+        st.session_state.newly_created_pin = None
         st.rerun()
 
     if st.sidebar.button("🚪 Keluar / Logout"):
         st.session_state.logged_user = None
         st.session_state.selected_role = None
         st.session_state.game_state = "LOBBY"
+        st.session_state.newly_created_pin = None
         st.rerun()
 
     # ------------------------------------------
@@ -648,235 +656,277 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit / Hapus Kuis Saya", "➕ Buat Kuis Baru"])
+        # JIKA BARU SAJA MENERBITKAN KUIS, TAMPILKAN HALAMAN BARU KHUSUS PIN & BARCODE
+        if st.session_state.newly_created_pin:
+            created_pin = st.session_state.newly_created_pin
+            app_url = st.get_option("browser.serverAddress") or "amrena-quiz.streamlit.app"
+            full_url = f"https://{app_url}"
 
-        with tab1:
-            st.subheader("📡 Live Leaderboard & Kontrol Game")
-            all_rooms = get_rooms()
-            my_rooms = {k: v for k, v in all_rooms.items() if v.get("owner") == st.session_state.logged_user}
+            st.markdown(f"""
+                <div style='background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);'>
+                    <h1 style='color: #38bdf8; font-size: 38px;'>🎉 KUIS BERHASIL DITERBITKAN!</h1>
+                    <p style='color: #cbd5e1; font-size: 18px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>
+                    <div style='background: rgba(56, 189, 248, 0.1); border: 2px dashed #38bdf8; padding: 20px; border-radius: 15px; display: inline-block; margin: 15px 0;'>
+                        <span style='font-size: 20px; color: #f8fafc;'>KODE PIN GAME:</span><br>
+                        <span style='font-size: 48px; font-weight: 800; color: #fbbf24; letter-spacing: 5px;'>{created_pin}</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
-            if my_rooms:
-                selected_pin = st.selectbox("Pilih Kode PIN Game Anda:", list(my_rooms.keys()), key="select_pin_tab1")
-                room = my_rooms[selected_pin]
-                current_status = room.get("status", "WAITING")
+            col_qr1, col_qr2, col_qr3 = st.columns([1, 2, 1])
+            with col_qr2:
+                st.write("")
+                st.write("**Scan Barcode untuk Masuk ke Link Aplikasi:**")
+                qr_bytes = generate_qr_code(full_url)
+                st.image(qr_bytes, caption=full_url, width=250)
 
-                st.write(f"Status Game PIN **{selected_pin}**: **{'🟢 BERJALAN' if current_status == 'STARTED' else '🟡 MENUNGGU DIMULAI'}**")
-
-                c_btn1, c_btn2, c_btn3 = st.columns(3)
-                with c_btn1:
-                    if st.button("▶️ MULAI GAME SEKARANG", type="primary", use_container_width=True):
-                        all_rooms[selected_pin]["status"] = "STARTED"
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_go1, col_go2, col_go3 = st.columns([1, 2, 1])
+            with col_go2:
+                if st.button("🚀 MULAI KUIS SEKARANG (MASUK KE LIVE LEADERBOARD)", type="primary", use_container_width=True):
+                    all_rooms = get_rooms()
+                    if created_pin in all_rooms:
+                        all_rooms[created_pin]["status"] = "STARTED"
                         save_all_rooms(all_rooms)
-                        st.success("Game Dimulai!")
-                        st.rerun()
-                with c_btn2:
-                    if st.button("⏸️ RESET KE RUANG TUNGGU", use_container_width=True):
-                        all_rooms[selected_pin]["status"] = "WAITING"
-                        save_all_rooms(all_rooms)
-                        st.warning("Game dikembalikan ke Ruang Tunggu.")
-                        st.rerun()
-                with c_btn3:
-                    is_live = st.checkbox("🔴 Aktifkan Live Mode & Suara", value=True)
+                    st.session_state.newly_created_pin = None
+                    st.rerun()
 
-                st.divider()
-                board = st.empty()
+                if st.button("⬅️ Kembali ke Control Room", use_container_width=True):
+                    st.session_state.newly_created_pin = None
+                    st.rerun()
 
-                def update_leaderboard_live():
-                    rooms_now = get_rooms()
-                    r_data = rooms_now.get(selected_pin, {})
-                    players_data = r_data.get("players", {})
+        else:
+            tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit / Hapus Kuis Saya", "➕ Buat Kuis Baru"])
 
-                    with board.container():
-                        if players_data:
-                            sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
-                            current_ranks = {p_name: idx + 1 for idx, (p_name, _) in enumerate(sorted_players)}
-                            
-                            announcement = ""
-                            for p_name, new_rank in current_ranks.items():
-                                if p_name in st.session_state.last_ranks:
-                                    old_rank = st.session_state.last_ranks[p_name]
-                                    if new_rank < old_rank:
-                                        passed = old_rank - new_rank
+            with tab1:
+                st.subheader("📡 Live Leaderboard & Kontrol Game")
+                all_rooms = get_rooms()
+                my_rooms = {k: v for k, v in all_rooms.items() if v.get("owner") == st.session_state.logged_user}
+
+                if my_rooms:
+                    selected_pin = st.selectbox("Pilih Kode PIN Game Anda:", list(my_rooms.keys()), key="select_pin_tab1")
+                    room = my_rooms[selected_pin]
+                    current_status = room.get("status", "WAITING")
+
+                    st.write(f"Status Game PIN **{selected_pin}**: **{'🟢 BERJALAN' if current_status == 'STARTED' else '🟡 MENUNGGU DIMULAI'}**")
+
+                    c_btn1, c_btn2, c_btn3 = st.columns(3)
+                    with c_btn1:
+                        if st.button("▶️ MULAI GAME SEKARANG", type="primary", use_container_width=True):
+                            all_rooms[selected_pin]["status"] = "STARTED"
+                            save_all_rooms(all_rooms)
+                            st.success("Game Dimulai!")
+                            st.rerun()
+                    with c_btn2:
+                        if st.button("⏸️ RESET KE RUANG TUNGGU", use_container_width=True):
+                            all_rooms[selected_pin]["status"] = "WAITING"
+                            save_all_rooms(all_rooms)
+                            st.warning("Game dikembalikan ke Ruang Tunggu.")
+                            st.rerun()
+                    with c_btn3:
+                        is_live = st.checkbox("🔴 Aktifkan Live Mode & Suara", value=True)
+
+                    st.divider()
+                    board = st.empty()
+
+                    def update_leaderboard_live():
+                        rooms_now = get_rooms()
+                        r_data = rooms_now.get(selected_pin, {})
+                        players_data = r_data.get("players", {})
+
+                        with board.container():
+                            if players_data:
+                                sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
+                                current_ranks = {p_name: idx + 1 for idx, (p_name, _) in enumerate(sorted_players)}
+                                
+                                announcement = ""
+                                for p_name, new_rank in current_ranks.items():
+                                    if p_name in st.session_state.last_ranks:
+                                        old_rank = st.session_state.last_ranks[p_name]
+                                        if new_rank < old_rank:
+                                            passed = old_rank - new_rank
+                                            if new_rank == 1:
+                                                announcement = f"Luar biasa! {p_name} memimpin di posisi pertama!"
+                                            else:
+                                                announcement = f"{p_name} menyusul {passed} pemain dan menempati posisi ke {new_rank}!"
+                                            break
+                                    else:
                                         if new_rank == 1:
-                                            announcement = f"Luar biasa! {p_name} memimpin di posisi pertama!"
-                                        else:
-                                            announcement = f"{p_name} menyusul {passed} pemain dan menempati posisi ke {new_rank}!"
-                                        break
-                                else:
-                                    if new_rank == 1:
-                                        announcement = f"{p_name} memimpin di posisi pertama!"
+                                            announcement = f"{p_name} memimpin di posisi pertama!"
 
-                            st.session_state.last_ranks = current_ranks
+                                st.session_state.last_ranks = current_ranks
 
-                            if announcement and is_live:
-                                speak(announcement)
-                                st.toast(f"🔊 Narator: {announcement}")
+                                if announcement and is_live:
+                                    speak(announcement)
+                                    st.toast(f"🔊 Narator: {announcement}")
 
-                            st.subheader("🥇 LEADERBOARD REAL-TIME")
-                            podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
-                            
-                            for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
-                                av = p_info.get("avatar", "🏔️")
-                                st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
-
-                            if len(sorted_players) > 3:
-                                st.subheader("📋 Pemain Lainnya:")
-                                for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
+                                st.subheader("🥇 LEADERBOARD REAL-TIME")
+                                podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
+                                
+                                for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
                                     av = p_info.get("avatar", "🏔️")
-                                    st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
-                        else:
-                            st.info("Belum ada pemain yang masuk/menyelesaikan kuis ini.")
+                                    st.success(f"**{podium_icons[idx]}**: {av} **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
 
-                update_leaderboard_live()
+                                if len(sorted_players) > 3:
+                                    st.subheader("📋 Pemain Lainnya:")
+                                    for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
+                                        av = p_info.get("avatar", "🏔️")
+                                        st.write(f"**#{idx}** {av} **{p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
+                            else:
+                                st.info("Belum ada pemain yang masuk/menyelesaikan kuis ini.")
 
-                if is_live:
-                    time.sleep(3)
-                    st.rerun()
+                    update_leaderboard_live()
 
-            else:
-                st.warning("Anda belum memiliki kuis yang diterbitkan.")
-
-        with tab2:
-            st.subheader("⚙️ Kelola & Edit Kuis Milik Anda")
-            all_rooms = get_rooms()
-            my_rooms = {k: v for k, v in all_rooms.items() if v.get("owner") == st.session_state.logged_user}
-
-            if my_rooms:
-                edit_pin = st.selectbox("Pilih Kuis (PIN) yang Ingin Dikelola:", list(my_rooms.keys()), key="select_pin_tab2")
-                room_to_edit = all_rooms[edit_pin]
-                soal_list = room_to_edit.get("soal", [])
-                players_in_room = room_to_edit.get("players", {})
-
-                with st.expander("🚨 HAPUS KUIS / ROOM INI SEUTUHNYA", expanded=False):
-                    st.error(f"⚠️ Hapus PIN {edit_pin} beserta seluruh data kuis dan pemain secara permanen.")
-                    if st.button(f"🗑️ Hapus Kuis PIN {edit_pin} Sekarang", type="primary", key="btn_del_room"):
-                        del all_rooms[edit_pin]
-                        save_all_rooms(all_rooms)
-                        st.success(f"Kuis PIN {edit_pin} berhasil dihapus!")
+                    if is_live:
+                        time.sleep(3)
                         st.rerun()
 
-                st.divider()
-                st.write("### 👥 Kelola & Hapus Pemain")
-                if players_in_room:
-                    col_p1, col_p2 = st.columns([2, 1])
-                    with col_p1:
-                        player_to_remove = st.selectbox("Pilih Pemain:", list(players_in_room.keys()), key="select_player_del")
-                    with col_p2:
-                        st.write("")
-                        st.write("")
-                        if st.button("❌ Hapus Pemain Ini", key="btn_del_player"):
-                            del all_rooms[edit_pin]["players"][player_to_remove]
-                            save_all_rooms(all_rooms)
-                            st.success(f"Pemain '{player_to_remove}' berhasil dihapus!")
-                            st.rerun()
                 else:
-                    st.info("Belum ada pemain di kuis ini.")
+                    st.warning("Anda belum memiliki kuis yang diterbitkan.")
 
-                st.divider()
-                st.write("### 📝 Edit / Hapus Soal")
-                st.info(f"Kuis **PIN {edit_pin}** memiliki **{len(soal_list)} soal**.")
+            with tab2:
+                st.subheader("⚙️ Kelola & Edit Kuis Milik Anda")
+                all_rooms = get_rooms()
+                my_rooms = {k: v for k, v in all_rooms.items() if v.get("owner") == st.session_state.logged_user}
 
-                with st.expander("➕ Tambah Soal Baru ke Kuis Ini"):
-                    new_q = st.text_input("Pertanyaan Baru:", key="add_q")
-                    o1 = st.text_input("Pilihan 1 (Merah):", key="add_o1")
-                    o2 = st.text_input("Pilihan 2 (Biru):", key="add_o2")
-                    o3 = st.text_input("Pilihan 3 (Kuning):", key="add_o3")
-                    o4 = st.text_input("Pilihan 4 (Hijau):", key="add_o4")
-                    ans_choice = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="add_ans")
+                if my_rooms:
+                    edit_pin = st.selectbox("Pilih Kuis (PIN) yang Ingin Dikelola:", list(my_rooms.keys()), key="select_pin_tab2")
+                    room_to_edit = all_rooms[edit_pin]
+                    soal_list = room_to_edit.get("soal", [])
+                    players_in_room = room_to_edit.get("players", {})
 
-                    if st.button("💾 Simpan Soal Baru", key="btn_save_new_q"):
-                        if new_q and o1 and o2 and o3 and o4:
-                            mapping = {"Pilihan 1": o1, "Pilihan 2": o2, "Pilihan 3": o3, "Pilihan 4": o4}
-                            all_rooms[edit_pin]["soal"].append({
-                                "question": new_q,
-                                "options": [o1, o2, o3, o4],
-                                "answer": mapping[ans_choice]
-                            })
+                    with st.expander("🚨 HAPUS KUIS / ROOM INI SEUTUHNYA", expanded=False):
+                        st.error(f"⚠️ Hapus PIN {edit_pin} beserta seluruh data kuis dan pemain secara permanen.")
+                        if st.button(f"🗑️ Hapus Kuis PIN {edit_pin} Sekarang", type="primary", key="btn_del_room"):
+                            del all_rooms[edit_pin]
                             save_all_rooms(all_rooms)
-                            st.success("Soal baru berhasil ditambahkan!")
+                            st.success(f"Kuis PIN {edit_pin} berhasil dihapus!")
                             st.rerun()
-                        else:
-                            st.error("Semua kolom harus diisi!")
 
-                for idx, item in enumerate(soal_list):
-                    with st.expander(f"Soal #{idx+1}: {item['question']}"):
-                        eq = st.text_input("Pertanyaan:", value=item["question"], key=f"eq_{edit_pin}_{idx}")
-                        eo1 = st.text_input("Pilihan 1:", value=item["options"][0], key=f"eo1_{edit_pin}_{idx}")
-                        eo2 = st.text_input("Pilihan 2:", value=item["options"][1], key=f"eo2_{edit_pin}_{idx}")
-                        eo3 = st.text_input("Pilihan 3:", value=item["options"][2], key=f"eo3_{edit_pin}_{idx}")
-                        eo4 = st.text_input("Pilihan 4:", value=item["options"][3], key=f"eo4_{edit_pin}_{idx}")
-
-                        try:
-                            curr_ans_idx = item["options"].index(item["answer"])
-                        except ValueError:
-                            curr_ans_idx = 0
-
-                        eans = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], index=curr_ans_idx, key=f"eans_{edit_pin}_{idx}")
-
-                        col_update, col_delete = st.columns(2)
-                        with col_update:
-                            if st.button("💾 Simpan Perubahan", key=f"btn_upd_{edit_pin}_{idx}"):
-                                mapping = {"Pilihan 1": eo1, "Pilihan 2": eo2, "Pilihan 3": eo3, "Pilihan 4": eo4}
-                                all_rooms[edit_pin]["soal"][idx] = {
-                                    "question": eq,
-                                    "options": [eo1, eo2, eo3, eo4],
-                                    "answer": mapping[eans]
-                                }
+                    st.divider()
+                    st.write("### 👥 Kelola & Hapus Pemain")
+                    if players_in_room:
+                        col_p1, col_p2 = st.columns([2, 1])
+                        with col_p1:
+                            player_to_remove = st.selectbox("Pilih Pemain:", list(players_in_room.keys()), key="select_player_del")
+                        with col_p2:
+                            st.write("")
+                            st.write("")
+                            if st.button("❌ Hapus Pemain Ini", key="btn_del_player"):
+                                del all_rooms[edit_pin]["players"][player_to_remove]
                                 save_all_rooms(all_rooms)
-                                st.success(f"Soal #{idx+1} diperbarui!")
+                                st.success(f"Pemain '{player_to_remove}' berhasil dihapus!")
                                 st.rerun()
+                    else:
+                        st.info("Belum ada pemain di kuis ini.")
 
-                        with col_delete:
-                            if st.button("🗑️ Hapus Soal", key=f"btn_del_q_{edit_pin}_{idx}"):
-                                all_rooms[edit_pin]["soal"].pop(idx)
+                    st.divider()
+                    st.write("### 📝 Edit / Hapus Soal")
+                    st.info(f"Kuis **PIN {edit_pin}** memiliki **{len(soal_list)} soal**.")
+
+                    with st.expander("➕ Tambah Soal Baru ke Kuis Ini"):
+                        new_q = st.text_input("Pertanyaan Baru:", key="add_q")
+                        o1 = st.text_input("Pilihan 1 (Merah):", key="add_o1")
+                        o2 = st.text_input("Pilihan 2 (Biru):", key="add_o2")
+                        o3 = st.text_input("Pilihan 3 (Kuning):", key="add_o3")
+                        o4 = st.text_input("Pilihan 4 (Hijau):", key="add_o4")
+                        ans_choice = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="add_ans")
+
+                        if st.button("💾 Simpan Soal Baru", key="btn_save_new_q"):
+                            if new_q and o1 and o2 and o3 and o4:
+                                mapping = {"Pilihan 1": o1, "Pilihan 2": o2, "Pilihan 3": o3, "Pilihan 4": o4}
+                                all_rooms[edit_pin]["soal"].append({
+                                    "question": new_q,
+                                    "options": [o1, o2, o3, o4],
+                                    "answer": mapping[ans_choice]
+                                })
                                 save_all_rooms(all_rooms)
-                                st.warning(f"Soal #{idx+1} dihapus!")
+                                st.success("Soal baru berhasil ditambahkan!")
                                 st.rerun()
-            else:
-                st.warning("Anda belum memiliki kuis untuk dikelola.")
+                            else:
+                                st.error("Semua kolom harus diisi!")
 
-        with tab3:
-            st.subheader("Buat Kuis Baru")
-            if "draft_soal" not in st.session_state:
-                st.session_state.draft_soal = []
+                    for idx, item in enumerate(soal_list):
+                        with st.expander(f"Soal #{idx+1}: {item['question']}"):
+                            eq = st.text_input("Pertanyaan:", value=item["question"], key=f"eq_{edit_pin}_{idx}")
+                            eo1 = st.text_input("Pilihan 1:", value=item["options"][0], key=f"eo1_{edit_pin}_{idx}")
+                            eo2 = st.text_input("Pilihan 2:", value=item["options"][1], key=f"eo2_{edit_pin}_{idx}")
+                            eo3 = st.text_input("Pilihan 3:", value=item["options"][2], key=f"eo3_{edit_pin}_{idx}")
+                            eo4 = st.text_input("Pilihan 4:", value=item["options"][3], key=f"eo4_{edit_pin}_{idx}")
 
-            mode_game = st.selectbox("🎮 Pilih Mode Game:", ["🏔️ Petualangan Mendaki Gunung", "🎯 Mode Klasik (Kahoot Style)"], key="create_mode")
+                            try:
+                                curr_ans_idx = item["options"].index(item["answer"])
+                            except ValueError:
+                                curr_ans_idx = 0
 
-            st.write("---")
-            soal = st.text_input("Pertanyaan Kuis:", key="c_q")
-            a = st.text_input("Pilihan 1 (🔺 Merah):", key="c_a")
-            b = st.text_input("Pilihan 2 (🔷 Biru):", key="c_b")
-            c = st.text_input("Pilihan 3 (🟡 Kuning):", key="c_c")
-            d = st.text_input("Pilihan 4 (🟩 Hijau):", key="c_d")
-            kunci = st.selectbox("Kunci Jawaban Benar:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
+                            eans = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], index=curr_ans_idx, key=f"eans_{edit_pin}_{idx}")
 
-            if st.button("➕ Tambahkan ke Draft Soal", key="btn_add_draft"):
-                if soal and a and b and c and d:
-                    mapping = {"Pilihan 1": a, "Pilihan 2": b, "Pilihan 3": c, "Pilihan 4": d}
-                    st.session_state.draft_soal.append({
-                        "question": soal,
-                        "options": [a, b, c, d],
-                        "answer": mapping[kunci]
-                    })
-                    st.success("Soal berhasil ditambahkan ke draft!")
-                    st.rerun()
+                            col_update, col_delete = st.columns(2)
+                            with col_update:
+                                if st.button("💾 Simpan Perubahan", key=f"btn_upd_{edit_pin}_{idx}"):
+                                    mapping = {"Pilihan 1": eo1, "Pilihan 2": eo2, "Pilihan 3": eo3, "Pilihan 4": eo4}
+                                    all_rooms[edit_pin]["soal"][idx] = {
+                                        "question": eq,
+                                        "options": [eo1, eo2, eo3, eo4],
+                                        "answer": mapping[eans]
+                                    }
+                                    save_all_rooms(all_rooms)
+                                    st.success(f"Soal #{idx+1} diperbarui!")
+                                    st.rerun()
+
+                            with col_delete:
+                                if st.button("🗑️ Hapus Soal", key=f"btn_del_q_{edit_pin}_{idx}"):
+                                    all_rooms[edit_pin]["soal"].pop(idx)
+                                    save_all_rooms(all_rooms)
+                                    st.warning(f"Soal #{idx+1} dihapus!")
+                                    st.rerun()
                 else:
-                    st.error("Semua kolom pertanyaan dan pilihan wajib diisi!")
+                    st.warning("Anda belum memiliki kuis untuk dikelola.")
 
-            st.write(f"**Draft Soal Dibuat:** {len(st.session_state.draft_soal)} Soal")
-
-            if len(st.session_state.draft_soal) > 0:
-                if st.button("🚀 TERBITKAN GAME & GENERATE PIN", type="primary", key="btn_publish"):
-                    kode_pin = ''.join(random.choices(string.digits, k=6))
-                    
-                    room_data = {
-                        "owner": st.session_state.logged_user,
-                        "status": "WAITING",
-                        "mode": mode_game,
-                        "soal": list(st.session_state.draft_soal),
-                        "players": {}
-                    }
-                    save_room(kode_pin, room_data)
-
+            with tab3:
+                st.subheader("Buat Kuis Baru")
+                if "draft_soal" not in st.session_state:
                     st.session_state.draft_soal = []
-                    st.success(f"🎉 Game Berhasil Diterbitkan!\n\n🔑 BAGIKAN KODE PIN INI KE PEMAIN: **{kode_pin}**")
+
+                mode_game = st.selectbox("🎮 Pilih Mode Game:", ["🏔️ Petualangan Mendaki Gunung", "🎯 Mode Klasik (Kahoot Style)"], key="create_mode")
+
+                st.write("---")
+                soal = st.text_input("Pertanyaan Kuis:", key="c_q")
+                a = st.text_input("Pilihan 1 (🔺 Merah):", key="c_a")
+                b = st.text_input("Pilihan 2 (🔷 Biru):", key="c_b")
+                c = st.text_input("Pilihan 3 (🟡 Kuning):", key="c_c")
+                d = st.text_input("Pilihan 4 (🟩 Hijau):", key="c_d")
+                kunci = st.selectbox("Kunci Jawaban Benar:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
+
+                if st.button("➕ Tambahkan ke Draft Soal", key="btn_add_draft"):
+                    if soal and a and b and c and d:
+                        mapping = {"Pilihan 1": a, "Pilihan 2": b, "Pilihan 3": c, "Pilihan 4": d}
+                        st.session_state.draft_soal.append({
+                            "question": soal,
+                            "options": [a, b, c, d],
+                            "answer": mapping[kunci]
+                        })
+                        st.success("Soal berhasil ditambahkan ke draft!")
+                        st.rerun()
+                    else:
+                        st.error("Semua kolom pertanyaan dan pilihan wajib diisi!")
+
+                st.write(f"**Draft Soal Dibuat:** {len(st.session_state.draft_soal)} Soal")
+
+                if len(st.session_state.draft_soal) > 0:
+                    if st.button("🚀 TERBITKAN GAME & GENERATE PIN", type="primary", key="btn_publish"):
+                        kode_pin = ''.join(random.choices(string.digits, k=6))
+                        
+                        room_data = {
+                            "owner": st.session_state.logged_user,
+                            "status": "WAITING",
+                            "mode": mode_game,
+                            "soal": list(st.session_state.draft_soal),
+                            "players": {}
+                        }
+                        save_room(kode_pin, room_data)
+
+                        st.session_state.draft_soal = []
+                        # Simpan PIN ke session state supaya langsung membuka halaman khusus PIN & Barcode
+                        st.session_state.newly_created_pin = kode_pin
+                        st.rerun()
