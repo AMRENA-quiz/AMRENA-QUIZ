@@ -6,7 +6,7 @@ import time
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="QUIZ'ARN", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="QUIZ'ARN", page_icon="💡", layout="wide")
 
 # --- CUSTOM CSS MODERN DENGAN HEADER KANAN ATAS ---
 st.markdown("""
