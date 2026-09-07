@@ -2,7 +2,7 @@ import random
 import string
 import json
 import os
-import Streamlit as st
+import streamlit as st
 
 st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="centered")
 
