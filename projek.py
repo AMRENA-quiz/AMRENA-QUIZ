@@ -4,7 +4,7 @@ import json
 import os
 import streamlit as st
 
-st.set_page_config(page_title="Game Quiz Interaktif", page_icon="🏔️", layout="centered")
+st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="centered")
 
 # --- CUSTOM CSS ---
 st.markdown("""
@@ -58,7 +58,7 @@ def submit_score(pin, player_name, score, altitude):
 # Preset Soal bawaan (PIN: 123456)
 DEFAULT_ROOMS = {
     "123456": {
-        "status": "WAITING", # WAITING / STARTED
+        "status": "WAITING",
         "mode": "🏔️ Petualangan Mendaki Gunung",
         "soal": [
             {
@@ -95,7 +95,7 @@ if "game_state" not in st.session_state:
 # HALAMAN UTAMA: PILIH PERAN
 # ==========================================
 if st.session_state.user_role is None:
-    st.markdown("<h1 style='text-align: center; color: white;'>🏔️ QUIZ ADVENTURE GAME</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: white;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #f0f0f0;'>Pilih peran kamu untuk melanjutkan:</p>", unsafe_allow_html=True)
     st.write("")
 
@@ -214,7 +214,7 @@ elif st.session_state.user_role == "DEV":
                 kode_pin = ''.join(random.choices(string.digits, k=6))
                 
                 room_data = {
-                    "status": "WAITING", # Selalu mulai dari status WAITING
+                    "status": "WAITING",
                     "mode": mode_game,
                     "soal": list(st.session_state.draft_soal),
                     "players": {}
@@ -256,7 +256,7 @@ elif st.session_state.user_role == "PLAYER":
             else:
                 st.error("Kode PIN tidak ditemukan! Periksa kembali PIN kamu.")
 
-    # LAYAR 2: RUANG TUNGGU (LOBBY MENUNGGU HOST KLIK MULAI)
+    # LAYAR 2: RUANG TUNGGU
     elif st.session_state.game_state == "WAITING_ROOM":
         pin = st.session_state.active_pin
         active_rooms = get_rooms()
@@ -269,7 +269,6 @@ elif st.session_state.user_role == "PLAYER":
         room_data = active_rooms[pin]
         status_game = room_data.get("status", "WAITING")
 
-        # Jika Host sudah klik "MULAI GAME", pindahkan pemain ke layar main
         if status_game == "STARTED":
             st.session_state.game_state = "PLAYING"
             st.rerun()
@@ -395,6 +394,10 @@ elif st.session_state.user_role == "PLAYER":
 
             if my_rank:
                 st.info(f"🎯 Posisi Kamu Saat Ini: **Peringkat ke-{my_rank}** dari **{len(sorted_players)} Pemain**")
+
+        if st.button("🔄 Main Lagi"):
+            st.session_state.game_state = "LOBBY"
+            st.rerun()
 
         if st.button("🔄 Main Lagi"):
             st.session_state.game_state = "LOBBY"
