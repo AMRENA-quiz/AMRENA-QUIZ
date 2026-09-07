@@ -1,3 +1,7 @@
+import random
+import string
+import json
+import os
 import streamlit as st
 
 st.set_page_config(page_title="Game Quiz Interaktif", page_icon="🏔️", layout="centered")
@@ -16,8 +20,26 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- DATABASE SOAL PERMANEN ---
-PRESET_ROOMS = {
+# --- SISTEM DATABASE PENYIMPANAN SERVER (JSON) ---
+DB_FILE = "rooms_db.json"
+
+def get_rooms():
+    if not os.path.exists(DB_FILE):
+        return {}
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_room(pin, data):
+    rooms = get_rooms()
+    rooms[pin] = data
+    with open(DB_FILE, "w") as f:
+        json.dump(rooms, f)
+
+# Preset Soal bawaan (PIN: 123456) agar selalu ada soal siap pakai
+DEFAULT_ROOMS = {
     "123456": {
         "mode": "🏔️ Petualangan Mendaki Gunung",
         "soal": [
@@ -40,6 +62,11 @@ PRESET_ROOMS = {
     }
 }
 
+if not os.path.exists(DB_FILE):
+    with open(DB_FILE, "w") as f:
+        json.dump(DEFAULT_ROOMS, f)
+
+# Inisialisasi Session State
 if "user_role" not in st.session_state:
     st.session_state.user_role = None
 
@@ -57,19 +84,19 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Lihat daftar PIN aktif dan instruksi game.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal kuis kamu sendiri, pilih mode game, dan dapatkan Kode PIN.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
 
     with col2:
-        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dan nama kamu untuk mulai bermain.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan nama kamu untuk mulai bertualang.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pemain", use_container_width=True):
             st.session_state.user_role = "PLAYER"
             st.rerun()
 
 # ==========================================
-# MODUL 1: PENGEMBANG
+# MODUL 1: PENGEMBANG (INPUT SOAL SENDIRI)
 # ==========================================
 elif st.session_state.user_role == "DEV":
     st.sidebar.title("👨‍💻 Pengembang")
@@ -77,9 +104,63 @@ elif st.session_state.user_role == "DEV":
         st.session_state.user_role = None
         st.rerun()
 
-    st.title("📋 Daftar Kode PIN Aktif")
-    st.success("🔑 PIN AKTIF UTAMA: **123456**")
-    st.info("Gunakan PIN **123456** di HP pemain untuk langsung mencoba kuis pendakian gunung!")
+    st.title("🛠️ Buat Kuis & Soal Sendiri")
+
+    if "draft_soal" not in st.session_state:
+        st.session_state.draft_soal = []
+
+    mode_game = st.selectbox("🎮 Pilih Metode/Gaya Permainan:", ["🏔️ Petualangan Mendaki Gunung", "🎯 Mode Klasik (Kahoot Style)"])
+
+    # Form Pembuatan Soal
+    with st.form("form_buat_soal", clear_on_submit=True):
+        st.subheader("Tambah Pertanyaan")
+        soal = st.text_input("Pertanyaan:")
+        a = st.text_input("Pilihan 1 (🔺 Merah):")
+        b = st.text_input("Pilihan 2 (🔷 Biru):")
+        c = st.text_input("Pilihan 3 (🟡 Kuning):")
+        d = st.text_input("Pilihan 4 (🟩 Hijau):")
+        kunci = st.selectbox("Kunci Jawaban Benar:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"])
+
+        if st.form_submit_button("➕ Tambahkan Soal ini"):
+            if soal and a and b and c and d:
+                mapping = {"Pilihan 1": a, "Pilihan 2": b, "Pilihan 3": c, "Pilihan 4": d}
+                st.session_state.draft_soal.append({
+                    "question": soal,
+                    "options": [a, b, c, d],
+                    "answer": mapping[kunci]
+                })
+                st.success("Soal berhasil ditambahkan ke daftar draft!")
+            else:
+                st.error("Semua kolom (pertanyaan & 4 pilihan) wajib diisi!")
+
+    st.divider()
+    st.write(f"**Jumlah Soal Dibuat Saat Ini:** {len(st.session_state.draft_soal)} Soal")
+
+    # Tampilkan Preview Soal
+    for idx, s in enumerate(st.session_state.draft_soal):
+        st.write(f"{idx+1}. **{s['question']}** (Kunci: {s['answer']})")
+
+    # Terbitkan Kuis & Bikin PIN
+    if len(st.session_state.draft_soal) > 0:
+        if st.button("🚀 TERBITKAN GAME & BUAT KODE PIN", type="primary"):
+            kode_pin = ''.join(random.choices(string.digits, k=6))
+            
+            # Simpan ke File Database Server
+            room_data = {
+                "mode": mode_game,
+                "soal": list(st.session_state.draft_soal)
+            }
+            save_room(kode_pin, room_data)
+
+            st.session_state.draft_soal = []
+            st.success(f"🎉 Game Berhasil Diterbitkan!\n\n🔑 BAGIKAN KODE PIN INI KE PEMAIN: **{kode_pin}**")
+
+    # Tampilkan Daftar Semua Room Aktif
+    all_rooms = get_rooms()
+    if all_rooms:
+        st.subheader("📋 Daftar PIN Game Aktif:")
+        for pin_code, r_info in all_rooms.items():
+            st.info(f"🔑 PIN: **{pin_code}** | Mode: {r_info['mode']} | Total Soal: {len(r_info['soal'])}")
 
 # ==========================================
 # MODUL 2: ANGGOTA / PEMAIN
@@ -94,11 +175,12 @@ elif st.session_state.user_role == "PLAYER":
     # LAYAR 1: LOBBY
     if st.session_state.game_state == "LOBBY":
         st.title("🎯 Masuk ke Game Kuis")
-        input_pin = st.text_input("Masukkan Kode PIN Game (Contoh: 123456):", max_chars=6)
+        input_pin = st.text_input("Masukkan Kode PIN Game:", max_chars=6)
         input_nama = st.text_input("Masukkan Nama Kamu:")
 
         if st.button("🚀 MULAI PETUALANGAN", type="primary"):
-            if input_pin in PRESET_ROOMS:
+            active_rooms = get_rooms()
+            if input_pin in active_rooms:
                 if input_nama.strip():
                     st.session_state.active_pin = input_pin
                     st.session_state.player_name = input_nama
@@ -110,12 +192,19 @@ elif st.session_state.user_role == "PLAYER":
                 else:
                     st.warning("Nama tidak boleh kosong!")
             else:
-                st.error("Kode PIN salah! Masukkan kode PIN aktif: **123456**")
+                st.error("Kode PIN tidak ditemukan! Pastikan Pengembang sudah menekan tombol 'Terbitkan Game'.")
 
     # LAYAR 2: PENGERJAAN QUIZ
     elif st.session_state.game_state == "PLAYING":
         pin = st.session_state.active_pin
-        room_data = PRESET_ROOMS[pin]
+        active_rooms = get_rooms()
+        
+        if pin not in active_rooms:
+            st.error("PIN tidak ditemukan!")
+            st.session_state.game_state = "LOBBY"
+            st.rerun()
+
+        room_data = active_rooms[pin]
         soal_list = room_data["soal"]
         mode = room_data["mode"]
         q_idx = st.session_state.current_q
@@ -168,8 +257,8 @@ elif st.session_state.user_role == "PLAYER":
     elif st.session_state.game_state == "RESULT":
         st.balloons()
         pin = st.session_state.active_pin
-        room_data = PRESET_ROOMS[pin]
-        mode = room_data["mode"]
+        active_rooms = get_rooms()
+        mode = active_rooms[pin]["mode"] if pin in active_rooms else "Kuis"
         
         if "Mendaki" in mode:
             st.markdown("<h1 style='text-align: center; color: white;'>🏔️ PENDAKIAN SELESAI! 🏆</h1>", unsafe_allow_html=True)
