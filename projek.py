@@ -13,7 +13,8 @@ st.markdown("""
     .question-box { background-color: white; padding: 25px; border-radius: 15px; text-align: center; font-size: 24px; font-weight: bold; color: #222; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     .role-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.3); margin-bottom: 20px; }
     .climb-box { background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; border: 2px solid #ffd700; }
-    .leaderboard-box { background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #ffd700; }
+    .rank-card { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); padding: 12px 20px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid #ffd700; font-size: 18px; }
+    .my-rank { background: rgba(255, 215, 0, 0.3) !important; border: 2px solid #ffd700 !important; font-weight: bold; }
     div[key="btn_0"] > button { background-color: #e21b3c !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
     div[key="btn_1"] > button { background-color: #1368ce !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
     div[key="btn_2"] > button { background-color: #d89e00 !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
@@ -143,14 +144,12 @@ elif st.session_state.user_role == "DEV":
             st.divider()
 
             if players_data:
-                # Urutkan berdasarkan Skor tertinggi
                 sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
 
                 st.subheader("🥇 TOP 3 PERINGKAT TERATAS")
-                
                 podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
                 for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
-                    st.success(f"**{podium_icons[idx]}**: **{p_name}** | Skor: **{p_info['score']} Poin** (Ketinggian: {p_info['altitude']}m)")
+                    st.success(f"**{podium_icons[idx]}**: **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
 
                 if len(sorted_players) > 3:
                     st.subheader("📋 Daftar Pemain Lainnya:")
@@ -225,7 +224,7 @@ elif st.session_state.user_role == "PLAYER":
             if input_pin in active_rooms:
                 if input_nama.strip():
                     st.session_state.active_pin = input_pin
-                    st.session_state.player_name = input_nama
+                    st.session_state.player_name = input_nama.strip()
                     st.session_state.current_q = 0
                     st.session_state.score = 0
                     st.session_state.altitude = 0
@@ -292,12 +291,12 @@ elif st.session_state.user_role == "PLAYER":
                 st.session_state.current_q += 1
                 st.rerun()
             else:
-                # Simpan Skor ke Server secara otomatis!
+                # Simpan Skor Pemain Otomatis ke File JSON
                 submit_score(pin, st.session_state.player_name, st.session_state.score, st.session_state.altitude)
                 st.session_state.game_state = "RESULT"
                 st.rerun()
 
-    # LAYAR 3: HASIL
+    # LAYAR 3: HASIL & PAPAN PERINGKAT PEMAIN
     elif st.session_state.game_state == "RESULT":
         st.balloons()
         pin = st.session_state.active_pin
@@ -311,20 +310,44 @@ elif st.session_state.user_role == "PLAYER":
             st.markdown("<h1 style='text-align: center; color: white;'>🏆 KUIS SELESAI 🏆</h1>", unsafe_allow_html=True)
             st.markdown(f"<h3 style='text-align: center; color: white;'>Kerja Bagus, {st.session_state.player_name}!</h3>", unsafe_allow_html=True)
 
-        st.metric(label="Total Skor Poin", value=f"{st.session_state.score} Poin")
+        st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
 
-        # Tampilkan Leaderboard Singkat di Layar Pemain
+        # --- TAMPILAN PAPAN PERINGKAT UNTUK PEMAIN ---
         st.divider()
-        st.subheader("🏆 Papan Skor Sementara PIN Ini:")
+        st.subheader("🏆 PAPAN PERINGKAT PEMAIN (LEADERBOARD)")
+        
+        if st.button("🔄 Perbarui Peringkat"):
+            st.rerun()
+
         if pin in active_rooms and "players" in active_rooms[pin]:
             players = active_rooms[pin]["players"]
-            sorted_p = sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)
-            for idx, (p_name, p_info) in enumerate(sorted_p[:3], start=1):
-                st.write(f"**Peringkat #{idx}:** {p_name} — {p_info['score']} Poin")
+            # Urutkan berdasarkan skor tertinggi
+            sorted_players = sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)
+            
+            medals = ["🥇", "🥈", "🥉"]
+            my_rank = None
 
-        if st.button("🔄 Main Lagi"):
-            st.session_state.game_state = "LOBBY"
-            st.rerun()
+            # Tampilkan Top 3 & Highlight Pemain
+            for idx, (p_name, p_info) in enumerate(sorted_players, start=1):
+                icon = medals[idx-1] if idx <= 3 else f"#{idx}"
+                is_me = (p_name == st.session_state.player_name)
+                
+                if is_me:
+                    my_rank = idx
+                    st.markdown(f"""
+                        <div class='rank-card my-rank'>
+                            <b>{icon} {p_name} (KAMU)</b> — {p_info['score']} Poin ({p_info['altitude']}m) ✨
+                        </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div class='rank-card'>
+                            <b>{icon} {p_name}</b> — {p_info['score']} Poin ({p_info['altitude']}m)
+                        </div>
+                    """, unsafe_allow_html=True)
+
+            if my_rank:
+                st.info(f"🎯 Posisi Kamu Saat Ini: **Peringkat ke-{my_rank}** dari **{len(sorted_players)} Pemain**")
 
         if st.button("🔄 Main Lagi"):
             st.session_state.game_state = "LOBBY"
