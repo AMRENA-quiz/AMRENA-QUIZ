@@ -219,7 +219,7 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p style='color:#94a3b8;'>Kelola soal, kontrol jalannya permainan, dan pantau klasemen live.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p style='color:#94a3b8;'>Kelola soal, hapus kuis/pemain, dan pantau klasemen live.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
@@ -241,7 +241,7 @@ elif st.session_state.user_role == "DEV":
 
     st.title("🛠️ Control Room Pengembang")
 
-    tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit Soal", "➕ Buat Kuis Baru"])
+    tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola, Edit & Hapus Soal/Room", "➕ Buat Kuis Baru"])
 
     # --- TAB 1: KONTROL GAME & LIVE LEADERBOARD WITH TTS ---
     with tab1:
@@ -287,7 +287,6 @@ elif st.session_state.user_role == "DEV":
                         current_ranks = {p_name: idx + 1 for idx, (p_name, _) in enumerate(sorted_players)}
                         
                         announcement = ""
-                        # Cek Perubahan Posisi untuk Narasi Suara
                         for p_name, new_rank in current_ranks.items():
                             if p_name in st.session_state.last_ranks:
                                 old_rank = st.session_state.last_ranks[p_name]
@@ -333,15 +332,54 @@ elif st.session_state.user_role == "DEV":
         else:
             st.warning("Belum ada Kuis yang diterbitkan.")
 
-    # --- TAB 2: EDIT & TAMBAH SOAL ---
+    # --- TAB 2: EDIT & HAPUS (SOAL, PEMAIN, & KUIS) ---
     with tab2:
-        st.subheader("✏️ Edit & Tambah Soal Kuis")
+        st.subheader("⚙️ Kelola, Edit & Hapus Data Kuis")
         all_rooms = get_rooms()
         if all_rooms:
-            edit_pin = st.selectbox("Pilih Kuis (PIN) yang Mau Di-edit:", list(all_rooms.keys()), key="select_pin_tab2")
+            edit_pin = st.selectbox("Pilih Kuis (PIN) yang Mau Dikelola:", list(all_rooms.keys()), key="select_pin_tab2")
             room_to_edit = all_rooms[edit_pin]
             soal_list = room_to_edit.get("soal", [])
+            players_in_room = room_to_edit.get("players", {})
 
+            # --- SUB-BAGIAN: HAPUS ENTIRE KUIS/ROOM ---
+            with st.expander("🚨 HAPUS KUIS / ROOM INI", expanded=False):
+                st.error("⚠️ Tindakan ini akan menghapus kuis beserta semua data soal dan pemain di PIN ini secara permanen.")
+                if st.button(f"🗑️ Hapus Kuis PIN {edit_pin} Permanen", type="primary"):
+                    del all_rooms[edit_pin]
+                    save_all_rooms(all_rooms)
+                    st.success(f"Kuis PIN {edit_pin} berhasil dihapus!")
+                    st.rerun()
+
+            st.divider()
+
+            # --- SUB-BAGIAN: HAPUS PEMAIN ---
+            st.write("### 👥 Kelola Data Pemain")
+            if players_in_room:
+                col_p1, col_p2 = st.columns([2, 1])
+                with col_p1:
+                    player_to_remove = st.selectbox("Pilih Pemain yang mau dihapus:", list(players_in_room.keys()))
+                with col_p2:
+                    st.write("")
+                    st.write("")
+                    if st.button("❌ Hapus Pemain Ini"):
+                        del all_rooms[edit_pin]["players"][player_to_remove]
+                        save_all_rooms(all_rooms)
+                        st.success(f"Pemain '{player_to_remove}' berhasil dikeluarkan!")
+                        st.rerun()
+
+                if st.button("🔄 Reset Semua Data Pemain di Kuis Ini"):
+                    all_rooms[edit_pin]["players"] = {}
+                    save_all_rooms(all_rooms)
+                    st.warning("Semua data pemain berhasil di-reset!")
+                    st.rerun()
+            else:
+                st.info("Belum ada data pemain di kuis ini.")
+
+            st.divider()
+
+            # --- SUB-BAGIAN: EDIT & TAMBAH SOAL ---
+            st.write("### 📝 Edit & Tambah Soal Kuis")
             st.info(f"Kuis **PIN {edit_pin}** saat ini punya **{len(soal_list)} soal**.")
 
             with st.expander("➕ Tambah Soal Baru ke Kuis Ini"):
@@ -366,9 +404,6 @@ elif st.session_state.user_role == "DEV":
                             st.rerun()
                         else:
                             st.error("Semua field wajib diisi!")
-
-            st.divider()
-            st.write("### 📝 Daftar Soal Saat Ini:")
 
             for idx, item in enumerate(soal_list):
                 with st.expander(f"Soal #{idx+1}: {item['question']}"):
@@ -409,7 +444,7 @@ elif st.session_state.user_role == "DEV":
                             st.warning(f"Soal #{idx+1} berhasil dihapus!")
                             st.rerun()
         else:
-            st.warning("Belum ada Kuis yang tersedia untuk di-edit.")
+            st.warning("Belum ada Kuis yang tersedia untuk di-edit/dikelola.")
 
     # --- TAB 3: BUAT KUIS BARU ---
     with tab3:
@@ -504,7 +539,7 @@ elif st.session_state.user_role == "PLAYER":
         active_rooms = get_rooms()
 
         if pin not in active_rooms:
-            st.error("PIN tidak ditemukan!")
+            st.error("PIN/Kuis sudah dihapus atau tidak ditemukan!")
             st.session_state.game_state = "LOBBY"
             st.rerun()
 
@@ -578,7 +613,6 @@ elif st.session_state.user_role == "PLAYER":
             else:
                 st.error(f"❌ SALAH! Jawaban benar: {q_data['answer']}")
 
-            # Update Skor Langsung ke Server Server Real-Time
             submit_score(pin, st.session_state.player_name, st.session_state.player_avatar, st.session_state.score, st.session_state.altitude)
 
             if q_idx + 1 < len(soal_list):
@@ -630,10 +664,6 @@ elif st.session_state.user_role == "PLAYER":
                             <span><b>{p_info['score']} Poin</b> ({p_info['altitude']}m)</span>
                         </div>
                     """, unsafe_allow_html=True)
-
-        if st.button("🔄 Main Lagi", key="btn_play_again"):
-            st.session_state.game_state = "LOBBY"
-            st.rerun()
 
         if st.button("🔄 Main Lagi", key="btn_play_again"):
             st.session_state.game_state = "LOBBY"
