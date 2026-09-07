@@ -91,7 +91,6 @@ if "game_state" not in st.session_state:
 # HALAMAN UTAMA: PILIH PERAN
 # ==========================================
 if st.session_state.user_role is None:
-    # MENAMPILKAN LOGO DI HALAMAN UTAMA
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     with col_l2:
         if os.path.exists("logo.png"):
@@ -105,19 +104,19 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, kontrol kapan game dimulai, dan pantau Peringkat Juara (Leaderboard).</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, edit soal yang ada, kontrol game, dan pantau Leaderboard.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
 
     with col2:
-        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan tunggu hingga Pengembang memulai game.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan tunggu hingga game dimulai.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pemain", use_container_width=True):
             st.session_state.user_role = "PLAYER"
             st.rerun()
 
 # ==========================================
-# MODUL 1: PENGEMBANG (CONTROL ROOM & MONITORING)
+# MODUL 1: PENGEMBANG (CONTROL ROOM & EDIT)
 # ==========================================
 elif st.session_state.user_role == "DEV":
     st.sidebar.title("👨‍💻 Pengembang")
@@ -127,13 +126,14 @@ elif st.session_state.user_role == "DEV":
 
     st.title("🛠️ Control Room Pengembang")
 
-    tab1, tab2 = st.tabs(["🎮 Kontrol & Pantau Game", "➕ Buat Soal Baru"])
+    tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Pantau Game", "✏️ Kelola & Edit Soal", "➕ Buat Kuis Baru"])
 
+    # --- TAB 1: KONTROL GAME ---
     with tab1:
         st.subheader("📡 Kontrol Real-Time Game")
         all_rooms = get_rooms()
         if all_rooms:
-            selected_pin = st.selectbox("Pilih Kode PIN Game:", list(all_rooms.keys()))
+            selected_pin = st.selectbox("Pilih Kode PIN Game:", list(all_rooms.keys()), key="select_pin_tab1")
             
             room = all_rooms[selected_pin]
             players_data = room.get("players", {})
@@ -146,13 +146,13 @@ elif st.session_state.user_role == "DEV":
                 if st.button("▶️ MULAI GAME SEKARANG", type="primary", use_container_width=True):
                     all_rooms[selected_pin]["status"] = "STARTED"
                     save_all_rooms(all_rooms)
-                    st.success("Game Dimulai! Pemain sekarang bisa melihat soal.")
+                    st.success("Game Dimulai!")
                     st.rerun()
             with c_btn2:
                 if st.button("⏸️ RESET KE RUANG TUNGGU", use_container_width=True):
                     all_rooms[selected_pin]["status"] = "WAITING"
                     save_all_rooms(all_rooms)
-                    st.warning("Game dikembalikan ke status Ruang Tunggu.")
+                    st.warning("Game dikembalikan ke Ruang Tunggu.")
                     st.rerun()
             with c_btn3:
                 if st.button("🔄 Refresh Data Pemain", use_container_width=True):
@@ -162,13 +162,12 @@ elif st.session_state.user_role == "DEV":
 
             col_a, col_b = st.columns(2)
             col_a.metric("Jumlah Pemain Terdata", len(players_data))
-            col_b.metric("Total Soal Dalam Game", len(room["soal"]))
+            col_b.metric("Total Soal Dalam Game", len(room.get("soal", [])))
 
             st.divider()
 
             if players_data:
                 sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
-
                 st.subheader("🥇 LEADERBOARD PERINGKAT")
                 podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
                 for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
@@ -179,11 +178,93 @@ elif st.session_state.user_role == "DEV":
                     for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
                         st.write(f"**#{idx} {p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
             else:
-                st.info("Belum ada pemain yang menyelesaikan kuis dengan PIN ini.")
+                st.info("Belum ada pemain yang menyelesaikan kuis ini.")
         else:
             st.warning("Belum ada Kuis yang diterbitkan.")
 
+    # --- TAB 2: EDIT & TAMBAH SOAL DARI KUIS YANG SUDAH ADA ---
     with tab2:
+        st.subheader("✏️ Edit & Tambah Soal Kuis")
+        all_rooms = get_rooms()
+        if all_rooms:
+            edit_pin = st.selectbox("Pilih Kuis (PIN) yang Mau Di-edit:", list(all_rooms.keys()), key="select_pin_tab2")
+            room_to_edit = all_rooms[edit_pin]
+            soal_list = room_to_edit.get("soal", [])
+
+            st.info(f"Kuis **PIN {edit_pin}** saat ini punya **{len(soal_list)} soal**.")
+
+            # Form Tambah Soal Baru ke PIN ini
+            with st.expander("➕ Tambah Soal Baru ke Kuis Ini"):
+                with st.form("form_tambah_soal_pin"):
+                    new_q = st.text_input("Pertanyaan Baru:")
+                    o1 = st.text_input("Pilihan 1 (Merah):")
+                    o2 = st.text_input("Pilihan 2 (Biru):")
+                    o3 = st.text_input("Pilihan 3 (Kuning):")
+                    o4 = st.text_input("Pilihan 4 (Hijau):")
+                    ans_choice = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"])
+
+                    if st.form_submit_button("Simpan Soal Baru"):
+                        if new_q and o1 and o2 and o3 and o4:
+                            mapping = {"Pilihan 1": o1, "Pilihan 2": o2, "Pilihan 3": o3, "Pilihan 4": o4}
+                            all_rooms[edit_pin]["soal"].append({
+                                "question": new_q,
+                                "options": [o1, o2, o3, o4],
+                                "answer": mapping[ans_choice]
+                            })
+                            save_all_rooms(all_rooms)
+                            st.success("Soal baru berhasil ditambahkan!")
+                            st.rerun()
+                        else:
+                            st.error("Semua field wajib diisi!")
+
+            st.divider()
+            st.write("### 📝 Daftar Soal Saat Ini:")
+
+            # Menampilkan & Mengedit Soal yang Sudah Ada
+            for idx, item in enumerate(soal_list):
+                with st.expander(f"Soal #{idx+1}: {item['question']}"):
+                    with st.form(key=f"edit_form_{edit_pin}_{idx}"):
+                        eq = st.text_input("Pertanyaan:", value=item["question"])
+                        eo1 = st.text_input("Pilihan 1:", value=item["options"][0])
+                        eo2 = st.text_input("Pilihan 2:", value=item["options"][1])
+                        eo3 = st.text_input("Pilihan 3:", value=item["options"][2])
+                        eo4 = st.text_input("Pilihan 4:", value=item["options"][3])
+
+                        # Cari indeks jawaban benar saat ini
+                        try:
+                            curr_ans_idx = item["options"].index(item["answer"])
+                        except ValueError:
+                            curr_ans_idx = 0
+
+                        eans = st.selectbox("Kunci Jawaban:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], index=curr_ans_idx)
+
+                        col_save, col_del = st.columns(2)
+                        with col_save:
+                            btn_update = st.form_submit_button("💾 Update Soal Ini")
+                        with col_del:
+                            btn_delete = st.form_submit_button("🗑️ Hapus Soal Ini")
+
+                        if btn_update:
+                            mapping = {"Pilihan 1": eo1, "Pilihan 2": eo2, "Pilihan 3": eo3, "Pilihan 4": eo4}
+                            all_rooms[edit_pin]["soal"][idx] = {
+                                "question": eq,
+                                "options": [eo1, eo2, eo3, eo4],
+                                "answer": mapping[eans]
+                            }
+                            save_all_rooms(all_rooms)
+                            st.success(f"Soal #{idx+1} berhasil diperbarui!")
+                            st.rerun()
+
+                        if btn_delete:
+                            all_rooms[edit_pin]["soal"].pop(idx)
+                            save_all_rooms(all_rooms)
+                            st.warning(f"Soal #{idx+1} berhasil dihapus!")
+                            st.rerun()
+        else:
+            st.warning("Belum ada Kuis yang tersedia untuk di-edit.")
+
+    # --- TAB 3: BUAT KUIS BARU ---
+    with tab3:
         st.subheader("Buat Kuis Baru")
         if "draft_soal" not in st.session_state:
             st.session_state.draft_soal = []
