@@ -15,6 +15,7 @@ st.markdown("""
     .climb-box { background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; border: 2px solid #ffd700; }
     .rank-card { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); padding: 12px 20px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid #ffd700; font-size: 18px; }
     .my-rank { background: rgba(255, 215, 0, 0.3) !important; border: 2px solid #ffd700 !important; font-weight: bold; }
+    .waiting-box { background: rgba(255, 255, 255, 0.1); border: 2px dashed #ffd700; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; }
     div[key="btn_0"] > button { background-color: #e21b3c !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
     div[key="btn_1"] > button { background-color: #1368ce !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
     div[key="btn_2"] > button { background-color: #d89e00 !important; color: white !important; height: 70px; font-size: 18px; font-weight: bold; border-radius: 10px; border: none; }
@@ -48,7 +49,6 @@ def submit_score(pin, player_name, score, altitude):
     if pin in rooms:
         if "players" not in rooms[pin]:
             rooms[pin]["players"] = {}
-        # Update atau tambah skor pemain
         rooms[pin]["players"][player_name] = {
             "score": score,
             "altitude": altitude
@@ -58,6 +58,7 @@ def submit_score(pin, player_name, score, altitude):
 # Preset Soal bawaan (PIN: 123456)
 DEFAULT_ROOMS = {
     "123456": {
+        "status": "WAITING", # WAITING / STARTED
         "mode": "🏔️ Petualangan Mendaki Gunung",
         "soal": [
             {
@@ -101,19 +102,19 @@ if st.session_state.user_role is None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, pantau jumlah pemain yang masuk, dan lihat Peringkat Juara (Leaderboard).</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>👨‍💻 Pengembang (Host)</h3><p>Buat soal, kontrol kapan game dimulai, dan pantau Peringkat Juara (Leaderboard).</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pengembang", use_container_width=True):
             st.session_state.user_role = "DEV"
             st.rerun()
 
     with col2:
-        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan nama kamu untuk mulai bertualang.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='role-card'><h3>🎮 Anggota (Pemain)</h3><p>Masukkan Kode PIN dari Pengembang dan tunggu hingga Pengembang memulai game.</p></div>", unsafe_allow_html=True)
         if st.button("Masuk sebagai Pemain", use_container_width=True):
             st.session_state.user_role = "PLAYER"
             st.rerun()
 
 # ==========================================
-# MODUL 1: PENGEMBANG (MONITORING & PANTAU PERINGKAT)
+# MODUL 1: PENGEMBANG (CONTROL ROOM & MONITORING)
 # ==========================================
 elif st.session_state.user_role == "DEV":
     st.sidebar.title("👨‍💻 Pengembang")
@@ -121,24 +122,43 @@ elif st.session_state.user_role == "DEV":
         st.session_state.user_role = None
         st.rerun()
 
-    st.title("🛠️ Dashboard Pengembang")
+    st.title("🛠️ Control Room Pengembang")
 
-    tab1, tab2 = st.tabs(["📊 Pantau Peringkat & Pemain", "➕ Buat Soal Baru"])
+    tab1, tab2 = st.tabs(["🎮 Kontrol & Pantau Game", "➕ Buat Soal Baru"])
 
     with tab1:
-        st.subheader("🏆 Papan Peringkat & Monitor Pemain")
-        if st.button("🔄 Refresh Data Pemain"):
-            st.rerun()
-
+        st.subheader("📡 Kontrol Real-Time Game")
         all_rooms = get_rooms()
         if all_rooms:
-            selected_pin = st.selectbox("Pilih Kode PIN Game yang Ingin Dipantau:", list(all_rooms.keys()))
+            selected_pin = st.selectbox("Pilih Kode PIN Game:", list(all_rooms.keys()))
             
             room = all_rooms[selected_pin]
             players_data = room.get("players", {})
+            current_status = room.get("status", "WAITING")
+
+            st.write(f"Status Game PIN **{selected_pin}**: **{'🟢 BERJALAN' if current_status == 'STARTED' else '🟡 MENUNGGU DIMULAI'}**")
+
+            c_btn1, c_btn2, c_btn3 = st.columns(3)
+            with c_btn1:
+                if st.button("▶️ MULAI GAME SEKARANG", type="primary", use_container_width=True):
+                    all_rooms[selected_pin]["status"] = "STARTED"
+                    save_all_rooms(all_rooms)
+                    st.success("Game Dimulai! Pemain sekarang bisa melihat soal.")
+                    st.rerun()
+            with c_btn2:
+                if st.button("⏸️ RESET KE RUANG TUNGGU", use_container_width=True):
+                    all_rooms[selected_pin]["status"] = "WAITING"
+                    save_all_rooms(all_rooms)
+                    st.warning("Game dikembalikan ke status Ruang Tunggu.")
+                    st.rerun()
+            with c_btn3:
+                if st.button("🔄 Refresh Data Pemain", use_container_width=True):
+                    st.rerun()
+
+            st.divider()
 
             col_a, col_b = st.columns(2)
-            col_a.metric("Jumlah Pemain Bergabung", len(players_data))
+            col_a.metric("Jumlah Pemain Terdata", len(players_data))
             col_b.metric("Total Soal Dalam Game", len(room["soal"]))
 
             st.divider()
@@ -146,13 +166,13 @@ elif st.session_state.user_role == "DEV":
             if players_data:
                 sorted_players = sorted(players_data.items(), key=lambda x: x[1]["score"], reverse=True)
 
-                st.subheader("🥇 TOP 3 PERINGKAT TERATAS")
+                st.subheader("🥇 LEADERBOARD PERINGKAT")
                 podium_icons = ["🥇 Juara 1", "🥈 Juara 2", "🥉 Juara 3"]
                 for idx, (p_name, p_info) in enumerate(sorted_players[:3]):
                     st.success(f"**{podium_icons[idx]}**: **{p_name}** | Skor: **{p_info['score']} Poin** ({p_info['altitude']}m)")
 
                 if len(sorted_players) > 3:
-                    st.subheader("📋 Daftar Pemain Lainnya:")
+                    st.subheader("📋 Pemain Lainnya:")
                     for idx, (p_name, p_info) in enumerate(sorted_players[3:], start=4):
                         st.write(f"**#{idx} {p_name}** — {p_info['score']} Poin ({p_info['altitude']}m)")
             else:
@@ -194,6 +214,7 @@ elif st.session_state.user_role == "DEV":
                 kode_pin = ''.join(random.choices(string.digits, k=6))
                 
                 room_data = {
+                    "status": "WAITING", # Selalu mulai dari status WAITING
                     "mode": mode_game,
                     "soal": list(st.session_state.draft_soal),
                     "players": {}
@@ -213,13 +234,13 @@ elif st.session_state.user_role == "PLAYER":
         st.session_state.game_state = "LOBBY"
         st.rerun()
 
-    # LAYAR 1: LOBBY
+    # LAYAR 1: INPUT PIN & NAMA
     if st.session_state.game_state == "LOBBY":
         st.title("🎯 Masuk ke Game Kuis")
         input_pin = st.text_input("Masukkan Kode PIN Game:", max_chars=6)
         input_nama = st.text_input("Masukkan Nama Kamu:")
 
-        if st.button("🚀 MULAI PETUALANGAN", type="primary"):
+        if st.button("🚀 MASUK RUANG TUNGGU", type="primary"):
             active_rooms = get_rooms()
             if input_pin in active_rooms:
                 if input_nama.strip():
@@ -228,14 +249,44 @@ elif st.session_state.user_role == "PLAYER":
                     st.session_state.current_q = 0
                     st.session_state.score = 0
                     st.session_state.altitude = 0
-                    st.session_state.game_state = "PLAYING"
+                    st.session_state.game_state = "WAITING_ROOM"
                     st.rerun()
                 else:
                     st.warning("Nama tidak boleh kosong!")
             else:
-                st.error("Kode PIN tidak ditemukan! Periksa kembali atau pastikan Pengembang sudah menerbitkan game.")
+                st.error("Kode PIN tidak ditemukan! Periksa kembali PIN kamu.")
 
-    # LAYAR 2: PENGERJAAN QUIZ
+    # LAYAR 2: RUANG TUNGGU (LOBBY MENUNGGU HOST KLIK MULAI)
+    elif st.session_state.game_state == "WAITING_ROOM":
+        pin = st.session_state.active_pin
+        active_rooms = get_rooms()
+
+        if pin not in active_rooms:
+            st.error("PIN tidak ditemukan!")
+            st.session_state.game_state = "LOBBY"
+            st.rerun()
+
+        room_data = active_rooms[pin]
+        status_game = room_data.get("status", "WAITING")
+
+        # Jika Host sudah klik "MULAI GAME", pindahkan pemain ke layar main
+        if status_game == "STARTED":
+            st.session_state.game_state = "PLAYING"
+            st.rerun()
+
+        st.markdown(f"""
+            <div class='waiting-box'>
+                <h2>⏳ MENUNGGU PENGEMBANG...</h2>
+                <p>Halo <b>{st.session_state.player_name}</b>, kamu sudah berhasil masuk!</p>
+                <p>Silakan tunggu Pengembang menekan tombol <b>'MULAI GAME'</b> di layar pengembang.</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.write("")
+        if st.button("🔄 Cek Apakah Game Sudah Dimulai"):
+            st.rerun()
+
+    # LAYAR 3: PENGERJAAN QUIZ
     elif st.session_state.game_state == "PLAYING":
         pin = st.session_state.active_pin
         active_rooms = get_rooms()
@@ -291,12 +342,11 @@ elif st.session_state.user_role == "PLAYER":
                 st.session_state.current_q += 1
                 st.rerun()
             else:
-                # Simpan Skor Pemain Otomatis ke File JSON
                 submit_score(pin, st.session_state.player_name, st.session_state.score, st.session_state.altitude)
                 st.session_state.game_state = "RESULT"
                 st.rerun()
 
-    # LAYAR 3: HASIL & PAPAN PERINGKAT PEMAIN
+    # LAYAR 4: HASIL & PERINGKAT PEMAIN
     elif st.session_state.game_state == "RESULT":
         st.balloons()
         pin = st.session_state.active_pin
@@ -312,7 +362,6 @@ elif st.session_state.user_role == "PLAYER":
 
         st.metric(label="Total Skor Poin Kamu", value=f"{st.session_state.score} Poin")
 
-        # --- TAMPILAN PAPAN PERINGKAT UNTUK PEMAIN ---
         st.divider()
         st.subheader("🏆 PAPAN PERINGKAT PEMAIN (LEADERBOARD)")
         
@@ -321,13 +370,11 @@ elif st.session_state.user_role == "PLAYER":
 
         if pin in active_rooms and "players" in active_rooms[pin]:
             players = active_rooms[pin]["players"]
-            # Urutkan berdasarkan skor tertinggi
             sorted_players = sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)
             
             medals = ["🥇", "🥈", "🥉"]
             my_rank = None
 
-            # Tampilkan Top 3 & Highlight Pemain
             for idx, (p_name, p_info) in enumerate(sorted_players, start=1):
                 icon = medals[idx-1] if idx <= 3 else f"#{idx}"
                 is_me = (p_name == st.session_state.player_name)
