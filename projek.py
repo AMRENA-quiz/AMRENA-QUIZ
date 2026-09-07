@@ -233,7 +233,11 @@ def update_user_coins_and_skins(username, earned_coins, new_skin=None):
         if "coins" not in users[username]:
             users[username]["coins"] = 0
         if "skins" not in users[username]:
-            users[username]["skins"] = ["🏔️ Penjelajah Gunung Standard"]
+            users[username]["skins"] = [
+                "🏔️ Penjelajah Gunung Standard", 
+                "🥾 Pendaki Pemula Cepat", 
+                "🧭 Ahli Kompas Alam"
+            ]
         
         users[username]["coins"] += earned_coins
         if new_skin and new_skin not in users[username]["skins"]:
@@ -343,11 +347,15 @@ if st.session_state.logged_user is None:
                 else:
                     users[clean_name] = {
                         "registered": True,
-                        "coins": 100,
-                        "skins": ["🏔️ Penjelajah Gunung Standard"]
+                        "coins": 300,  # Modal awal koin diperbanyak!
+                        "skins": [
+                            "🏔️ Penjelajah Gunung Standard", 
+                            "🥾 Pendaki Pemula Cepat", 
+                            "🧭 Ahli Kompas Alam"
+                        ]  # Langsung dapat 3 skin gratis!
                     }
                     save_users(users)
-                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+100 Koin Bonus)! Silakan Login.")
+                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
