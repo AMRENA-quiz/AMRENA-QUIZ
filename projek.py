@@ -656,36 +656,32 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        # TAMPILAN KOTAK RAPI BERGAYA MODERN SAAT KUIS BARU DITERBITKAN
+        # TAMPILAN KOTAK RAPI MENGGUNAKAN KOMPONEN STREAMLIT ASLI (DIJAMIN TIDAK BERANTAKAN)
         if st.session_state.newly_created_pin:
             created_pin = st.session_state.newly_created_pin
             full_url = "https://amrena-quiz.streamlit.app"
 
-            # Menggunakan wadah tengah (centered column) agar tidak kepanjangan/terlalu lebar
-            _, col_center, _ = st.columns([1, 2.5, 1])
+            _, col_center, _ = st.columns([1, 2, 1])
             with col_center:
-                st.markdown("""
-                    <div style='background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 2px solid #38bdf8; padding: 35px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(56, 189, 248, 0.25); text-align: center; margin-top: 20px; margin-bottom: 25px;'>
-                        <h2 style='color: #38bdf8; font-weight: 800; margin-bottom: 10px; font-size: 26px;'>🎉 KUIS BERHASIL DITERBITKAN!</h2>
-                        <p style='color: #cbd5e1; font-size: 14px; margin-bottom: 25px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>
-                        
-                        <div style='background: rgba(56, 189, 248, 0.1); border: 1px dashed #38bdf8; padding: 15px; border-radius: 16px; margin-bottom: 20px;'>
-                            <span style='font-size: 13px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 5px;'>KODE PIN GAME</span>
-                            <span style='font-size: 40px; font-weight: 800; color: #fbbf24; letter-spacing: 5px;'>{}</span>
-                        </div>
+                with st.container(border=True):
+                    st.markdown("<h3 style='text-align: center; color: #38bdf8; margin: 0;'>🎉 KUIS BERHASIL DITERBITKAN!</h3>", unsafe_allow_html=True)
+                    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 13px; margin-bottom: 20px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>", unsafe_allow_html=True)
 
-                        <div style='background: #ffffff; padding: 15px; border-radius: 16px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.3); margin-bottom: 10px;'>
-                """.format(created_pin), unsafe_allow_html=True)
-                
-                qr_bytes = generate_qr_code(full_url)
-                st.image(qr_bytes, width=160)
-                
-                st.markdown("""
-                        </div>
-                        <p style='font-size: 12px; color: #94a3b8; margin-top: 8px;'>Scan Barcode untuk Masuk ke Link Aplikasi</p>
-                    </div>
-                """, unsafe_allow_html=True)
+                    # Kotak Kode PIN
+                    st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; font-weight: 600; margin-bottom: 0;'>KODE PIN GAME:</p>", unsafe_allow_html=True)
+                    st.markdown(f"<h1 style='text-align: center; color: #fbbf24; letter-spacing: 5px; background: rgba(56, 189, 248, 0.15); padding: 10px; border-radius: 10px; border: 2px dashed #38bdf8; margin-top: 5px;'>{created_pin}</h1>", unsafe_allow_html=True)
 
+                    st.write("")
+                    
+                    # Barcode & Keterangan
+                    st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; font-weight: 600; margin-bottom: 5px;'>Scan Barcode untuk Masuk ke Link Aplikasi:</p>", unsafe_allow_html=True)
+                    
+                    qr_col1, qr_col2, qr_col3 = st.columns([1, 2, 1])
+                    with qr_col2:
+                        qr_bytes = generate_qr_code(full_url)
+                        st.image(qr_bytes, width=150)
+
+                st.write("")
                 if st.button("🚀 MULAI KUIS SEKARANG", type="primary", use_container_width=True):
                     all_rooms = get_rooms()
                     if created_pin in all_rooms:
