@@ -209,7 +209,7 @@ def speak(text):
 
 # --- FUNGSI GENERATE QR CODE ---
 def generate_qr_code(url):
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
@@ -656,31 +656,40 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        # JIKA BARU SAJA MENERBITKAN KUIS, TAMPILKAN HALAMAN BARU KHUSUS PIN & BARCODE
+        # JIKA BARU SAJA MENERBITKAN KUIS, TAMPILKAN HALAMAN BARU KHUSUS PIN & BARCODE BERBINGKAI BERDAMPINGAN
         if st.session_state.newly_created_pin:
             created_pin = st.session_state.newly_created_pin
-            app_url = st.get_option("browser.serverAddress") or "amrena-quiz.streamlit.app"
-            full_url = f"https://{app_url}"
+            full_url = "https://amrena-quiz.streamlit.app"
 
-            st.markdown(f"""
-                <div style='background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);'>
-                    <h1 style='color: #38bdf8; font-size: 38px;'>🎉 KUIS BERHASIL DITERBITKAN!</h1>
-                    <p style='color: #cbd5e1; font-size: 18px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>
-                    <div style='background: rgba(56, 189, 248, 0.1); border: 2px dashed #38bdf8; padding: 20px; border-radius: 15px; display: inline-block; margin: 15px 0;'>
-                        <span style='font-size: 20px; color: #f8fafc;'>KODE PIN GAME:</span><br>
-                        <span style='font-size: 48px; font-weight: 800; color: #fbbf24; letter-spacing: 5px;'>{created_pin}</span>
-                    </div>
-                </div>
+            st.markdown("<h1 style='text-align: center; color: #38bdf8;'>🎉 KUIS BERHASIL DITERBITKAN!</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>", unsafe_allow_html=True)
+
+            # KOTAK UTAMA PEMBUNGKUS BERDAMPINGAN
+            st.markdown("""
+                <div style='background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3); margin-bottom: 25px;'>
             """, unsafe_allow_html=True)
 
-            col_qr1, col_qr2, col_qr3 = st.columns([1, 2, 1])
-            with col_qr2:
-                st.write("")
+            col_box1, col_box2 = st.columns(2, gap="large")
+
+            with col_box1:
+                st.markdown("""
+                    <div style='text-align: center; padding: 20px;'>
+                        <span style='font-size: 20px; color: #f8fafc; font-weight: 700;'>KODE PIN GAME:</span><br><br>
+                """, unsafe_allow_html=True)
+                st.markdown(f"""
+                        <span style='font-size: 52px; font-weight: 800; color: #fbbf24; letter-spacing: 6px; background: rgba(56, 189, 248, 0.15); padding: 10px 25px; border-radius: 12px; border: 2px dashed #38bdf8;'>{created_pin}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            with col_box2:
+                st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
                 st.write("**Scan Barcode untuk Masuk ke Link Aplikasi:**")
                 qr_bytes = generate_qr_code(full_url)
-                st.image(qr_bytes, caption=full_url, width=250)
+                st.image(qr_bytes, width=200)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True) # Tutup kotak utama
+
             col_go1, col_go2, col_go3 = st.columns([1, 2, 1])
             with col_go2:
                 if st.button("🚀 MULAI KUIS SEKARANG (MASUK KE LIVE LEADERBOARD)", type="primary", use_container_width=True):
@@ -927,6 +936,5 @@ else:
                         save_room(kode_pin, room_data)
 
                         st.session_state.draft_soal = []
-                        # Simpan PIN ke session state supaya langsung membuka halaman khusus PIN & Barcode
                         st.session_state.newly_created_pin = kode_pin
                         st.rerun()
