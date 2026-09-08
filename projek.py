@@ -656,7 +656,7 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        # JIKA BARU SAJA MENERBITKAN KUIS, TAMPILKAN HALAMAN BARU KHUSUS PIN & BARCODE BERBINGKAI BERDAMPINGAN
+        # JIKA BARU SAJA MENERBITKAN KUIS, TAMPILKAN KOTAK BERUKURAN SEDANG YANG RAPI DI TENGAH
         if st.session_state.newly_created_pin:
             created_pin = st.session_state.newly_created_pin
             full_url = "https://amrena-quiz.streamlit.app"
@@ -664,28 +664,28 @@ else:
             st.markdown("<h1 style='text-align: center; color: #38bdf8;'>🎉 KUIS BERHASIL DITERBITKAN!</h1>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>", unsafe_allow_html=True)
 
-            # KOTAK UTAMA PEMBUNGKUS BERDAMPINGAN
+            # MEMBUAT KOTAK UTAMA YANG LEBIH RAPI DAN TERPUSAT (MAKSIMAL LEBAR 700PX)
             st.markdown("""
-                <div style='background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3); margin-bottom: 25px;'>
+                <div style='max-width: 700px; margin: auto; background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3); margin-bottom: 25px;'>
             """, unsafe_allow_html=True)
 
-            col_box1, col_box2 = st.columns(2, gap="large")
+            col_box1, col_box2 = st.columns(2, gap="medium")
 
             with col_box1:
                 st.markdown("""
-                    <div style='text-align: center; padding: 20px;'>
-                        <span style='font-size: 20px; color: #f8fafc; font-weight: 700;'>KODE PIN GAME:</span><br><br>
+                    <div style='text-align: center; padding-top: 15px;'>
+                        <span style='font-size: 16px; color: #f8fafc; font-weight: 700;'>KODE PIN GAME:</span><br><br>
                 """, unsafe_allow_html=True)
                 st.markdown(f"""
-                        <span style='font-size: 52px; font-weight: 800; color: #fbbf24; letter-spacing: 6px; background: rgba(56, 189, 248, 0.15); padding: 10px 25px; border-radius: 12px; border: 2px dashed #38bdf8;'>{created_pin}</span>
+                        <span style='font-size: 38px; font-weight: 800; color: #fbbf24; letter-spacing: 4px; background: rgba(56, 189, 248, 0.15); padding: 8px 15px; border-radius: 12px; border: 2px dashed #38bdf8;'>{created_pin}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
             with col_box2:
                 st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-                st.write("**Scan Barcode untuk Masuk ke Link Aplikasi:**")
+                st.write("**Scan Barcode:**")
                 qr_bytes = generate_qr_code(full_url)
-                st.image(qr_bytes, width=200)
+                st.image(qr_bytes, width=160)
                 st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True) # Tutup kotak utama
