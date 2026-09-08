@@ -472,6 +472,18 @@ else:
     st.sidebar.title(f"👤 {st.session_state.logged_user}")
     st.sidebar.write(f"Peran Aktif: **{'Pengembang' if st.session_state.selected_role == 'HOST' else 'Pemain'}**")
     
+    # Tombol Tambahan Khusus Host untuk Melihat PIN & QR Code Kapan Saja
+    if st.session_state.selected_role == "HOST":
+        all_rooms_check = get_rooms()
+        my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner") == st.session_state.logged_user]
+        if my_rooms_check:
+            st.sidebar.markdown("---")
+            selected_qr_pin = st.sidebar.selectbox("🔗 Lihat PIN & QR Kuis:", ["-- Pilih Kuis --"] + my_rooms_check)
+            if selected_qr_pin != "-- Pilih Kuis --":
+                if st.sidebar.button("📌 Buka Tampilan QR & PIN"):
+                    st.session_state.newly_created_pin = selected_qr_pin
+                    st.rerun()
+
     if st.sidebar.button("🔄 Ganti Peran / Menu Toko"):
         st.session_state.selected_role = None
         st.session_state.game_state = "LOBBY"
@@ -656,7 +668,7 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        # TAMPILAN KOTAK RAPI MENGGUNAKAN KOMPONEN STREAMLIT ASLI (DIJAMIN TIDAK BERANTAKAN)
+        # TAMPILAN KOTAK RAPI UNTUK KODE PIN & QR CODE
         if st.session_state.newly_created_pin:
             created_pin = st.session_state.newly_created_pin
             full_url = "https://amrena-quiz.streamlit.app"
@@ -664,7 +676,7 @@ else:
             _, col_center, _ = st.columns([1, 2, 1])
             with col_center:
                 with st.container(border=True):
-                    st.markdown("<h3 style='text-align: center; color: #38bdf8; margin: 0;'>🎉 KUIS BERHASIL DITERBITKAN!</h3>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='text-align: center; color: #38bdf8; margin: 0;'>🎉 KODE PIN & QR CODE KUIS</h3>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 13px; margin-bottom: 20px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>", unsafe_allow_html=True)
 
                     # Kotak Kode PIN
@@ -895,7 +907,7 @@ else:
                 b = st.text_input("Pilihan 2 (🔷 Biru):", key="c_b")
                 c = st.text_input("Pilihan 3 (🟡 Kuning):", key="c_c")
                 d = st.text_input("Pilihan 4 (🟩 Hijau):", key="c_d")
-                kunci = st.selectbox("Kunci Jawaban Benar:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
+                kunci = st.selectbox("Kunci Jawaban Benار:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
 
                 if st.button("➕ Tambahkan ke Draft Soal", key="btn_add_draft"):
                     if soal and a and b and c and d:
