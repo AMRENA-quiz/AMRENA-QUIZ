@@ -355,7 +355,7 @@ if st.session_state.logged_user is None:
             st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
             st.markdown("<h3 style='color: #38bdf8; text-align: center; margin-bottom: 20px;'>✨ Selamat Datang Kembali!</h3>", unsafe_allow_html=True)
             
-            login_username = st.text_input("👤 Masukkan Nama Kamu:", key="login_u", placeholder="User")
+            login_username = st.text_input("👤 Masukkan Nama Kamu:", key="login_u", placeholder="..........")
             st.write("")
             
             if st.button("🚀 MASUK SEKARANG", type="primary", key="btn_login_submit", use_container_width=True):
@@ -377,7 +377,7 @@ if st.session_state.logged_user is None:
             st.markdown("<h3 style='color: #fbbf24; text-align: center; margin-bottom: 10px;'>🌟 Buat Akun Pendaki Baru</h3>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 20px;'>Dapatkan bonus awal 300 Koin & 3 Skin Karakter Gratis!</p>", unsafe_allow_html=True)
             
-            reg_username = st.text_input("✨ Buat Nama Akun Baru:", key="reg_u", placeholder="User")
+            reg_username = st.text_input("✨ Buat Nama Akun Baru:", key="reg_u", placeholder="..........")
             st.write("")
 
             if st.button("➕ DAFTAR AKUN BARU", key="btn_reg_submit", use_container_width=True):
