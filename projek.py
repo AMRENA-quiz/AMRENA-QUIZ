@@ -112,13 +112,14 @@ st.markdown("""
         line-height: 1.5;
     }
 
+    /* KOTAK KARTU TRANSPARAN SESUAI ILUSTRASI GAMBAR */
     .auth-card {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(16px);
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(12px);
         border: 1px solid rgba(56, 189, 248, 0.3);
         padding: 30px;
         border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         margin: auto;
     }
 
@@ -325,7 +326,7 @@ if "newly_created_pin" not in st.session_state:
     st.session_state.newly_created_pin = None
 
 # ==========================================
-# Kotak Top Bar Profile (DI DALAM KOTAK TRANSPARAN)
+# Kotak Top Bar Profile
 # ==========================================
 if st.session_state.logged_user:
     users_data = get_users()
@@ -333,7 +334,6 @@ if st.session_state.logged_user:
     user_info = users_data.get(st.session_state.logged_user, {})
     total_coins = user_info.get("coins", 0)
     
-    # Render persis di dalam container dengan styling top-bar-container
     st.markdown(f"""
         <div class='top-bar-container'>
             <span class='user-badge'>👤 {st.session_state.logged_user}</span>
@@ -351,6 +351,7 @@ if st.session_state.logged_user is None:
     auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
+        # KOTAK KARTU TRANSPARAN MEMBUNGKUS JUDUL HINGGA TOMBOL MASUK
         st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
         st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
         
