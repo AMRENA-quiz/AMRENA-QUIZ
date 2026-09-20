@@ -381,22 +381,35 @@ if st.session_state.logged_user is None:
                 st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
 
     with auth_tab3:
-        st.subheader("📌 Informasi Detail Projek")
-        st.write("")
+        st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 25px; font-weight: 800;'>📌 Informasi Detail Projek</h2>", unsafe_allow_html=True)
         
         info_data = get_project_info()
         
-        st.markdown("**👥 Pembuat Karya:**")
-        st.markdown(info_data["pembuat"])
+        pembuat = info_data["pembuat"].replace('\n', '<br>')
+        mapel = info_data["mapel"].replace('\n', '<br>')
+        sekolah = info_data["sekolah"].replace('\n', '<br>')
+        guru = info_data["guru"].replace('\n', '<br>')
         
-        st.markdown("**📚 Mapel Pilihan:**")
-        st.markdown(info_data["mapel"])
-        
-        st.markdown("**🏫 Asal Sekolah:**")
-        st.markdown(info_data["sekolah"])
-        
-        st.markdown("**👨‍🏫 Guru Pembimbing:**")
-        st.markdown(info_data["guru"])
+        st.markdown(f"""
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 10px;">
+            <div style="background: rgba(255, 255, 255, 0.05); border-left: 6px solid #38bdf8; padding: 25px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="color: #ffffff; margin-top: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">👥 Pembuat Karya</h3>
+                <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 0;">{pembuat}</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); border-left: 6px solid #f59e0b; padding: 25px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="color: #ffffff; margin-top: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">📚 Mapel Pilihan</h3>
+                <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 0;">{mapel}</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); border-left: 6px solid #10b981; padding: 25px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="color: #ffffff; margin-top: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">🏫 Asal Sekolah</h3>
+                <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 0;">{sekolah}</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); border-left: 6px solid #8b5cf6; padding: 25px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="color: #ffffff; margin-top: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">👨‍🏫 Guru Pembimbing</h3>
+                <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 0;">{guru}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN
@@ -498,7 +511,7 @@ else:
     
     if st.session_state.selected_role == "HOST":
         all_rooms_check = get_rooms()
-        my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner") == st.session_state.logged_user]
+        my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner"] == st.session_state.logged_user]
         if my_rooms_check:
             st.sidebar.markdown("---")
             selected_qr_pin = st.sidebar.selectbox("🔗 Lihat PIN & QR Kuis:", ["-- Pilih Kuis --"] + my_rooms_check)
