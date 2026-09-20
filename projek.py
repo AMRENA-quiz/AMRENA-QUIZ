@@ -376,23 +376,20 @@ if st.session_state.logged_user is None:
             st.markdown("</div>", unsafe_allow_html=True)
 
     with col_right:
-        st.markdown("""
-            <div style='background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px; border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); color: #ffffff;'>
-                <h3 style='color: #38bdf8; margin-top: 0; margin-bottom: 20px; text-align: center;'>📌 Informasi Projek</h3>
-                
-                <p style='margin-bottom: 12px;'><b>👥 Pembuat Karya:</b><br>
-                <span style='color: #cbd5e1; padding-left: 10px;'>• Nastya<br>• Reva<br>• Amel</span></p>
-                
-                <p style='margin-bottom: 12px;'><b>📚 Mapel Pilihan:</b><br>
-                <span style='color: #cbd5e1; padding-left: 10px;'>TKJ XI</span></p>
-                
-                <p style='margin-bottom: 12px;'><b>🏫 Asal Sekolah:</b><br>
-                <span style='color: #cbd5e1; padding-left: 10px;'>SMKN 4 Padalarang</span></p>
-                
-                <p style='margin-bottom: 0;'><b>👨‍🏫 Guru Pembimbing:</b><br>
-                <span style='color: #cbd5e1; padding-left: 10px;'>Bapak Agung Dwi Arsito</span></p>
-            </div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### 📌 Informasi Projek")
+            st.write("")
+            st.markdown("**👥 Pembuat Karya:**")
+            st.markdown("- Nastya\n- Reva\n- Amel")
+            
+            st.markdown("**📚 Mapel Pilihan:**")
+            st.markdown("- TKJ XI")
+            
+            st.markdown("**🏫 Asal Sekolah:**")
+            st.markdown("- SMKN 4 Padalarang")
+            
+            st.markdown("**👨‍🏫 Guru Pembimbing:**")
+            st.markdown("- Bapak Agung Dwi Arsito")
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN
