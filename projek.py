@@ -341,7 +341,7 @@ if st.session_state.logged_user:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# MODUL 1: AUTHENTICATION (LOGIN & REGISTER ESTETIK)
+# MODUL 1: AUTHENTICATION (LOGIN & REGISTER BERSIH TANPA KOTAK)
 # ==========================================
 if st.session_state.logged_user is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 46px; font-weight: 800; text-shadow: 0 4px 20px rgba(56, 189, 248, 0.6); margin-top: 10px;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
@@ -352,10 +352,10 @@ if st.session_state.logged_user is None:
     with auth_tab1:
         c_l1, c_l2, c_l3 = st.columns([1, 2, 1])
         with c_l2:
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            # KOTAK TRANSPARAN SUDAH DIHAPUS DARI SINI
             st.markdown("<h3 style='color: #38bdf8; text-align: center; margin-bottom: 20px;'>✨ Selamat Datang Kembali!</h3>", unsafe_allow_html=True)
             
-            login_username = st.text_input("👤 Masukkan Nama Kamu:", key="login_u", placeholder="...")
+            login_username = st.text_input("👤 Masukkan Nama Kamu:", key="login_u", placeholder="Contoh: Budi Santoso")
             st.write("")
             
             if st.button("🚀 MASUK SEKARANG", type="primary", key="btn_login_submit", use_container_width=True):
@@ -368,16 +368,14 @@ if st.session_state.logged_user is None:
                     st.rerun()
                 else:
                     st.error("❌ Nama ini belum terdaftar! Silakan pilih tab 'Daftar Akun Baru' di atas.")
-            st.markdown("</div>", unsafe_allow_html=True)
 
     with auth_tab2:
         c_r1, c_r2, c_r3 = st.columns([1, 2, 1])
         with c_r2:
-            # BAGIAN KOTAK KOSONG SUDAH DIHAPUS, LANGSUNG TAMPILAN FORM BERSIH
             st.markdown("<h3 style='color: #fbbf24; text-align: center; margin-bottom: 10px;'>🌟 Buat Akun Pendaki Baru</h3>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 20px;'>Dapatkan bonus awal 300 Koin & 3 Skin Karakter Gratis!</p>", unsafe_allow_html=True)
             
-            reg_username = st.text_input("✨ Buat Nama Akun Baru:", key="reg_u", placeholder="...")
+            reg_username = st.text_input("✨ Buat Nama Akun Baru:", key="reg_u", placeholder="Contoh: Rina Amalia")
             st.write("")
 
             if st.button("➕ DAFTAR AKUN BARU", key="btn_reg_submit", use_container_width=True):
