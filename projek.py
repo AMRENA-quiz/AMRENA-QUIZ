@@ -325,10 +325,11 @@ if st.session_state.logged_user:
 # ==========================================
 if st.session_state.logged_user is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px; margin-bottom: 30px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
-    col_a, col_b, col_c = st.columns([1, 2, 1])
-    with col_b:
+    col_left, col_right = st.columns([1.3, 1], gap="large")
+
+    with col_left:
         auth_tab1, auth_tab2 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru"])
 
         with auth_tab1:
@@ -373,6 +374,25 @@ if st.session_state.logged_user is None:
                     save_users(users)
                     st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
             st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_right:
+        st.markdown("""
+            <div style='background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px; border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); color: #ffffff;'>
+                <h3 style='color: #38bdf8; margin-top: 0; margin-bottom: 20px; text-align: center;'>📌 Informasi Projek</h3>
+                
+                <p style='margin-bottom: 12px;'><b>👥 Pembuat Karya:</b><br>
+                <span style='color: #cbd5e1; padding-left: 10px;'>• Nastya<br>• Reva<br>• Amel</span></p>
+                
+                <p style='margin-bottom: 12px;'><b>📚 Mapel Pilihan:</b><br>
+                <span style='color: #cbd5e1; padding-left: 10px;'>TKJ XI</span></p>
+                
+                <p style='margin-bottom: 12px;'><b>🏫 Asal Sekolah:</b><br>
+                <span style='color: #cbd5e1; padding-left: 10px;'>SMKN 4 Padalarang</span></p>
+                
+                <p style='margin-bottom: 0;'><b>👨‍🏫 Guru Pembimbing:</b><br>
+                <span style='color: #cbd5e1; padding-left: 10px;'>Bapak Agung Dwi Arsito</span></p>
+            </div>
+        """, unsafe_allow_html=True)
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN
@@ -472,7 +492,6 @@ else:
     st.sidebar.title(f"👤 {st.session_state.logged_user}")
     st.sidebar.write(f"Peran Aktif: **{'Pengembang' if st.session_state.selected_role == 'HOST' else 'Pemain'}**")
     
-    # Tombol Tambahan Khusus Host untuk Melihat PIN & QR Code Kapan Saja
     if st.session_state.selected_role == "HOST":
         all_rooms_check = get_rooms()
         my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner") == st.session_state.logged_user]
@@ -668,7 +687,6 @@ else:
     elif st.session_state.selected_role == "HOST":
         st.title("🛠️ Control Room Pengembang")
 
-        # TAMPILAN KOTAK RAPI UNTUK KODE PIN & QR CODE
         if st.session_state.newly_created_pin:
             created_pin = st.session_state.newly_created_pin
             full_url = "https://amrena-quiz.streamlit.app"
@@ -679,13 +697,11 @@ else:
                     st.markdown("<h3 style='text-align: center; color: #38bdf8; margin: 0;'>🎉 KODE PIN & QR CODE KUIS</h3>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 13px; margin-bottom: 20px;'>Bagikan Kode PIN atau scan Barcode di bawah ke para pemain:</p>", unsafe_allow_html=True)
 
-                    # Kotak Kode PIN
                     st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; font-weight: 600; margin-bottom: 0;'>KODE PIN GAME:</p>", unsafe_allow_html=True)
                     st.markdown(f"<h1 style='text-align: center; color: #fbbf24; letter-spacing: 5px; background: rgba(56, 189, 248, 0.15); padding: 10px; border-radius: 10px; border: 2px dashed #38bdf8; margin-top: 5px;'>{created_pin}</h1>", unsafe_allow_html=True)
 
                     st.write("")
                     
-                    # Barcode & Keterangan
                     st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; font-weight: 600; margin-bottom: 5px;'>Scan Barcode untuk Masuk ke Link Aplikasi:</p>", unsafe_allow_html=True)
                     
                     qr_col1, qr_col2, qr_col3 = st.columns([1, 2, 1])
@@ -907,7 +923,7 @@ else:
                 b = st.text_input("Pilihan 2 (🔷 Biru):", key="c_b")
                 c = st.text_input("Pilihan 3 (🟡 Kuning):", key="c_c")
                 d = st.text_input("Pilihan 4 (🟩 Hijau):", key="c_d")
-                kunci = st.selectbox("Kunci Jawaban Benار:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
+                kunci = st.selectbox("Kunci Jawaban Benar:", ["Pilihan 1", "Pilihan 2", "Pilihan 3", "Pilihan 4"], key="c_kunci")
 
                 if st.button("➕ Tambahkan ke Draft Soal", key="btn_add_draft"):
                     if soal and a and b and c and d:
