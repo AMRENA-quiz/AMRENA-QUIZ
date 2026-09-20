@@ -350,7 +350,7 @@ if st.session_state.logged_user is None:
     auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
-        # Kotak Form Transparan (Auth Card)
+        # Kotak Form Transparan (Auth Card) dibungkus langsung di dalam tab
         st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
         st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
         
