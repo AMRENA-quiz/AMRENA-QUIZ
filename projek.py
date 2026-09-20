@@ -347,12 +347,13 @@ if st.session_state.logged_user is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px; margin-bottom: 30px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
-    # 3 Tab Utama di Halaman Depan: Login, Daftar, dan Informasi Projek
     auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
+        # Kotak Form Transparan (Auth Card)
         st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
-        st.subheader("Masuk dengan Nama Terdaftar")
+        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
+        
         login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
         
         if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
@@ -369,7 +370,8 @@ if st.session_state.logged_user is None:
 
     with auth_tab2:
         st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
-        st.subheader("Daftar Akun Baru")
+        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Daftar Akun Baru</h2>", unsafe_allow_html=True)
+        
         reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
 
         if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
