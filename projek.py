@@ -511,7 +511,7 @@ else:
     
     if st.session_state.selected_role == "HOST":
         all_rooms_check = get_rooms()
-        my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner"] == st.session_state.logged_user]
+        my_rooms_check = [k for k, v in all_rooms_check.items() if v.get("owner") == st.session_state.logged_user]
         if my_rooms_check:
             st.sidebar.markdown("---")
             selected_qr_pin = st.sidebar.selectbox("🔗 Lihat PIN & QR Kuis:", ["-- Pilih Kuis --"] + my_rooms_check)
