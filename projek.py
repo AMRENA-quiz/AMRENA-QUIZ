@@ -77,7 +77,6 @@ st.markdown("""
         font-size: 15px !important;
     }
 
-    /* KOTAK KARTU LOGIN / REGISTER ESTETIK */
     .auth-card {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(16px);
@@ -374,7 +373,7 @@ if st.session_state.logged_user is None:
     with auth_tab2:
         c_r1, c_r2, c_r3 = st.columns([1, 2, 1])
         with c_r2:
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            # BAGIAN KOTAK KOSONG SUDAH DIHAPUS, LANGSUNG TAMPILAN FORM BERSIH
             st.markdown("<h3 style='color: #fbbf24; text-align: center; margin-bottom: 10px;'>🌟 Buat Akun Pendaki Baru</h3>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 20px;'>Dapatkan bonus awal 300 Koin & 3 Skin Karakter Gratis!</p>", unsafe_allow_html=True)
             
@@ -400,7 +399,6 @@ if st.session_state.logged_user is None:
                     }
                     save_users(users)
                     st.success(f"🎉 Akun '{clean_name}' berhasil dibuat! Silakan pindah ke tab 'Masuk (Login)'.")
-            st.markdown("</div>", unsafe_allow_html=True)
 
     with auth_tab3:
         st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 25px; font-weight: 800;'>📌 Informasi Detail Projek</h2>", unsafe_allow_html=True)
