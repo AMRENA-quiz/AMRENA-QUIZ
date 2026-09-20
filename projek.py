@@ -112,18 +112,6 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* KOTAK KARTU TRANSPARAN UTAMA */
-    .auth-card {
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(56, 189, 248, 0.3);
-        padding: 35px;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-        max-width: 500px;
-        margin: 20px auto;
-    }
-
     .question-box {
         background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
         padding: 30px;
@@ -352,74 +340,63 @@ if st.session_state.logged_user is None:
     auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
-        # MENGGUNAKAN CONTAINER NATIVE STREAMLIT DI DALAM DIV AUTH-CARD SUPAYA WIDGET BERADA DI DALAM KOTAK TRANSPARAN
-        with st.container():
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
-            
-            login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
-            
-            if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
-                users = get_users()
-                clean_name = login_username.strip()
-                if not clean_name:
-                    st.error("Masukkan nama kamu terlebih dahulu!")
-                elif clean_name in users:
-                    st.session_state.logged_user = clean_name
-                    st.rerun()
-                else:
-                    st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu.")
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
+        
+        login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
+        
+        if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
+            users = get_users()
+            clean_name = login_username.strip()
+            if not clean_name:
+                st.error("Masukkan nama kamu terlebih dahulu!")
+            elif clean_name in users:
+                st.session_state.logged_user = clean_name
+                st.rerun()
+            else:
+                st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu.")
 
     with auth_tab2:
-        with st.container():
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Daftar Akun Baru</h2>", unsafe_allow_html=True)
-            
-            reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
+        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Daftar Akun Baru</h2>", unsafe_allow_html=True)
+        
+        reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
 
-            if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
-                users = get_users()
-                clean_name = reg_username.strip()
-                if not clean_name:
-                    st.error("Nama tidak boleh kosong!")
-                elif clean_name in users:
-                    st.warning("Nama ini sudah terdaftar!")
-                else:
-                    users[clean_name] = {
-                        "registered": True,
-                        "coins": 300,
-                        "skins": [
-                            "🏔️ Penjelajah Gunung Standard", 
-                            "🥾 Pendaki Pemula Cepat", 
-                            "🧭 Ahli Kompas Alam"
-                        ]
-                    }
-                    save_users(users)
-                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
-            st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
+            users = get_users()
+            clean_name = reg_username.strip()
+            if not clean_name:
+                st.error("Nama tidak boleh kosong!")
+            elif clean_name in users:
+                st.warning("Nama ini sudah terdaftar!")
+            else:
+                users[clean_name] = {
+                    "registered": True,
+                    "coins": 300,
+                    "skins": [
+                        "🏔️ Penjelajah Gunung Standard", 
+                        "🥾 Pendaki Pemula Cepat", 
+                        "🧭 Ahli Kompas Alam"
+                    ]
+                }
+                save_users(users)
+                st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
 
     with auth_tab3:
-        with st.container():
-            st.markdown("<div class='auth-card' style='max-width: 600px;'>", unsafe_allow_html=True)
-            st.subheader("📌 Informasi Detail Projek")
-            st.write("")
-            
-            info_data = get_project_info()
-            
-            st.markdown("**👥 Pembuat Karya:**")
-            st.markdown(info_data["pembuat"])
-            
-            st.markdown("**📚 Mapel Pilihan:**")
-            st.markdown(info_data["mapel"])
-            
-            st.markdown("**🏫 Asal Sekolah:**")
-            st.markdown(info_data["sekolah"])
-            
-            st.markdown("**👨‍🏫 Guru Pembimbing:**")
-            st.markdown(info_data["guru"])
-            
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.subheader("📌 Informasi Detail Projek")
+        st.write("")
+        
+        info_data = get_project_info()
+        
+        st.markdown("**👥 Pembuat Karya:**")
+        st.markdown(info_data["pembuat"])
+        
+        st.markdown("**📚 Mapel Pilihan:**")
+        st.markdown(info_data["mapel"])
+        
+        st.markdown("**🏫 Asal Sekolah:**")
+        st.markdown(info_data["sekolah"])
+        
+        st.markdown("**👨‍🏫 Guru Pembimbing:**")
+        st.markdown(info_data["guru"])
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN
