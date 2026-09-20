@@ -62,7 +62,7 @@ st.markdown("""
         font-size: 14px;
     }
 
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+    .stTextInput input, .stSelectbox div[data-baseweb="select"], .stTextArea textarea {
         background-color: rgba(15, 23, 42, 0.9) !important;
         color: #ffffff !important;
         border: 1px solid #38bdf8 !important;
@@ -120,7 +120,6 @@ st.markdown("""
         border-radius: 20px;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         margin: auto;
-        max-width: 500px;
     }
 
     .question-box {
@@ -220,6 +219,7 @@ def generate_qr_code(url):
 # --- DATABASE PENYIMPANAN SERVER (JSON) ---
 USERS_FILE = "users_db.json"
 ROOMS_FILE = "rooms_db.json"
+INFO_FILE = "info_db.json"
 
 def get_users():
     if not os.path.exists(USERS_FILE):
@@ -288,6 +288,26 @@ def submit_score(pin, player_name, avatar, score, altitude):
         }
         save_all_rooms(rooms)
 
+# --- MANAJEMEN INFORMASI PROJEK ---
+def get_project_info():
+    default_info = {
+        "pembuat": "- Nastya\n- Reva\n- Amel",
+        "mapel": "- TKJ XI",
+        "sekolah": "- SMKN 4 Padalarang",
+        "guru": "- Bapak Agung Dwi Arsito"
+    }
+    if not os.path.exists(INFO_FILE):
+        return default_info
+    try:
+        with open(INFO_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return default_info
+
+def save_project_info(info_data):
+    with open(INFO_FILE, "w") as f:
+        json.dump(info_data, f)
+
 # --- INISIALISASI SESSION STATE ---
 if "logged_user" not in st.session_state:
     st.session_state.logged_user = None
@@ -327,69 +347,72 @@ if st.session_state.logged_user is None:
     st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px; margin-bottom: 30px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
     
-    col_left, col_right = st.columns([1.3, 1], gap="large")
+    # 3 Tab Utama di Halaman Depan: Login, Daftar, dan Informasi Projek
+    auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
-    with col_left:
-        auth_tab1, auth_tab2 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru"])
+    with auth_tab1:
+        st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
+        st.subheader("Masuk dengan Nama Terdaftar")
+        login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
+        
+        if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
+            users = get_users()
+            clean_name = login_username.strip()
+            if not clean_name:
+                st.error("Masukkan nama kamu terlebih dahulu!")
+            elif clean_name in users:
+                st.session_state.logged_user = clean_name
+                st.rerun()
+            else:
+                st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        with auth_tab1:
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.subheader("Masuk dengan Nama Terdaftar")
-            login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
-            
-            if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
-                users = get_users()
-                clean_name = login_username.strip()
-                if not clean_name:
-                    st.error("Masukkan nama kamu terlebih dahulu!")
-                elif clean_name in users:
-                    st.session_state.logged_user = clean_name
-                    st.rerun()
-                else:
-                    st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu.")
-            st.markdown("</div>", unsafe_allow_html=True)
+    with auth_tab2:
+        st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
+        st.subheader("Daftar Akun Baru")
+        reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
 
-        with auth_tab2:
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.subheader("Daftar Akun Baru")
-            reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
+        if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
+            users = get_users()
+            clean_name = reg_username.strip()
+            if not clean_name:
+                st.error("Nama tidak boleh kosong!")
+            elif clean_name in users:
+                st.warning("Nama ini sudah terdaftar!")
+            else:
+                users[clean_name] = {
+                    "registered": True,
+                    "coins": 300,
+                    "skins": [
+                        "🏔️ Penjelajah Gunung Standard", 
+                        "🥾 Pendaki Pemula Cepat", 
+                        "🧭 Ahli Kompas Alam"
+                    ]
+                }
+                save_users(users)
+                st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
-                users = get_users()
-                clean_name = reg_username.strip()
-                if not clean_name:
-                    st.error("Nama tidak boleh kosong!")
-                elif clean_name in users:
-                    st.warning("Nama ini sudah terdaftar!")
-                else:
-                    users[clean_name] = {
-                        "registered": True,
-                        "coins": 300,
-                        "skins": [
-                            "🏔️ Penjelajah Gunung Standard", 
-                            "🥾 Pendaki Pemula Cepat", 
-                            "🧭 Ahli Kompas Alam"
-                        ]
-                    }
-                    save_users(users)
-                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_right:
-        with st.container(border=True):
-            st.markdown("### 📌 Informasi Projek")
-            st.write("")
-            st.markdown("**👥 Pembuat Karya:**")
-            st.markdown("- Nastya\n- Reva\n- Amel")
-            
-            st.markdown("**📚 Mapel Pilihan:**")
-            st.markdown("- TKJ XI")
-            
-            st.markdown("**🏫 Asal Sekolah:**")
-            st.markdown("- SMKN 4 Padalarang")
-            
-            st.markdown("**👨‍🏫 Guru Pembimbing:**")
-            st.markdown("- Bapak Agung Dwi Arsito")
+    with auth_tab3:
+        st.markdown("<div class='auth-card' style='max-width: 600px;'>", unsafe_allow_html=True)
+        st.subheader("📌 Informasi Detail Projek")
+        st.write("")
+        
+        info_data = get_project_info()
+        
+        st.markdown("**👥 Pembuat Karya:**")
+        st.markdown(info_data["pembuat"])
+        
+        st.markdown("**📚 Mapel Pilihan:**")
+        st.markdown(info_data["mapel"])
+        
+        st.markdown("**🏫 Asal Sekolah:**")
+        st.markdown(info_data["sekolah"])
+        
+        st.markdown("**👨‍🏫 Guru Pembimbing:**")
+        st.markdown(info_data["guru"])
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
 # MODUL 2: PILIH PERAN & TOKO SKIN
@@ -720,7 +743,7 @@ else:
                     st.rerun()
 
         else:
-            tab1, tab2, tab3 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit / Hapus Kuis Saya", "➕ Buat Kuis Baru"])
+            tab1, tab2, tab3, tab4 = st.tabs(["🎮 Kontrol & Live Leaderboard", "✏️ Kelola & Edit Kuis Saya", "➕ Buat Kuis Baru", "📝 Update Informasi Projek"])
 
             with tab1:
                 st.subheader("📡 Live Leaderboard & Kontrol Game")
@@ -953,3 +976,24 @@ else:
                         st.session_state.draft_soal = []
                         st.session_state.newly_created_pin = kode_pin
                         st.rerun()
+
+            with tab4:
+                st.subheader("📝 Update Teks Informasi Projek")
+                st.write("Ubah informasi pembuat, mapel, sekolah, atau guru pembimbing langsung dari sini tanpa ubah kode.")
+
+                current_info = get_project_info()
+
+                up_pembuat = st.text_area("Pembuat Karya (gunakan garis baru untuk list):", value=current_info["pembuat"], key="up_p")
+                up_mapel = st.text_area("Mapel Pilihan:", value=current_info["mapel"], key="up_m")
+                up_sekolah = st.text_area("Asal Sekolah:", value=current_info["sekolah"], key="up_s")
+                up_guru = st.text_area("Guru Pembimbing:", value=current_info["guru"], key="up_g")
+
+                if st.button("💾 Simpan Perubahan Informasi", type="primary", key="btn_save_info"):
+                    new_info_data = {
+                        "pembuat": up_pembuat,
+                        "mapel": up_mapel,
+                        "sekolah": up_sekolah,
+                        "guru": up_guru
+                    }
+                    save_project_info(new_info_data)
+                    st.success("🎉 Informasi projek berhasil diperbarui! Silakan cek di tab 'Informasi Projek'.")
