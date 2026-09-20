@@ -10,7 +10,7 @@ from io import BytesIO
 
 st.set_page_config(page_title="QUIZ'ARN", page_icon="🏔️", layout="wide")
 
-# --- CUSTOM CSS DENGAN BACKGROUND ANIMASI KEREN & MODERN ---
+# --- CUSTOM CSS DENGAN BACKGROUND ANIMASI & LOGIN ESTETIK ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
@@ -66,7 +66,7 @@ st.markdown("""
         background-color: rgba(15, 23, 42, 0.9) !important;
         color: #ffffff !important;
         border: 1px solid #38bdf8 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         font-size: 16px !important;
         font-weight: 600 !important;
     }
@@ -75,6 +75,17 @@ st.markdown("""
         color: #f8fafc !important;
         font-weight: 600 !important;
         font-size: 15px !important;
+    }
+
+    /* KOTAK KARTU LOGIN / REGISTER ESTETIK */
+    .auth-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        margin-top: 10px;
     }
 
     .role-card {
@@ -331,54 +342,65 @@ if st.session_state.logged_user:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# MODUL 1: AUTHENTICATION
+# MODUL 1: AUTHENTICATION (LOGIN & REGISTER ESTETIK)
 # ==========================================
 if st.session_state.logged_user is None:
-    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 42px; font-weight: 800; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px; margin-bottom: 30px;'>Silakan Daftar Nama Terlebih Dahulu, Lalu Login</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ffffff; font-size: 46px; font-weight: 800; text-shadow: 0 4px 20px rgba(56, 189, 248, 0.6); margin-top: 10px;'>🏔️ QUIZ'ARN</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 18px; margin-bottom: 25px;'>Platform Kuis Interaktif Berbasis Petualangan Pendakian Gunung</p>", unsafe_allow_html=True)
     
-    auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
+    auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Akun Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
-        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
-        
-        login_username = st.text_input("Masukkan Nama Kamu:", key="login_u")
-        
-        if st.button("🚀 MASUK", type="primary", key="btn_login_submit", use_container_width=True):
-            users = get_users()
-            clean_name = login_username.strip()
-            if not clean_name:
-                st.error("Masukkan nama kamu terlebih dahulu!")
-            elif clean_name in users:
-                st.session_state.logged_user = clean_name
-                st.rerun()
-            else:
-                st.error("❌ Nama ini belum terdaftar! Silakan daftar terlebih dahulu.")
+        c_l1, c_l2, c_l3 = st.columns([1, 2, 1])
+        with c_l2:
+            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #38bdf8; text-align: center; margin-bottom: 20px;'>✨ Selamat Datang Kembali!</h3>", unsafe_allow_html=True)
+            
+            login_username = st.text_input("👤 Masukkan Nama Kamu:", key="login_u", placeholder="Contoh: Budi Santoso")
+            st.write("")
+            
+            if st.button("🚀 MASUK SEKARANG", type="primary", key="btn_login_submit", use_container_width=True):
+                users = get_users()
+                clean_name = login_username.strip()
+                if not clean_name:
+                    st.error("⚠️ Masukkan nama kamu terlebih dahulu!")
+                elif clean_name in users:
+                    st.session_state.logged_user = clean_name
+                    st.rerun()
+                else:
+                    st.error("❌ Nama ini belum terdaftar! Silakan pilih tab 'Daftar Akun Baru' di atas.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     with auth_tab2:
-        st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Daftar Akun Baru</h2>", unsafe_allow_html=True)
-        
-        reg_username = st.text_input("Buat Nama Akun Baru:", key="reg_u")
+        c_r1, c_r2, c_r3 = st.columns([1, 2, 1])
+        with c_r2:
+            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #fbbf24; text-align: center; margin-bottom: 10px;'>🌟 Buat Akun Pendaki Baru</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 20px;'>Dapatkan bonus awal 300 Koin & 3 Skin Karakter Gratis!</p>", unsafe_allow_html=True)
+            
+            reg_username = st.text_input("✨ Buat Nama Akun Baru:", key="reg_u", placeholder="Contoh: Rina Amalia")
+            st.write("")
 
-        if st.button("➕ DAFTAR AKUN", key="btn_reg_submit", use_container_width=True):
-            users = get_users()
-            clean_name = reg_username.strip()
-            if not clean_name:
-                st.error("Nama tidak boleh kosong!")
-            elif clean_name in users:
-                st.warning("Nama ini sudah terdaftar!")
-            else:
-                users[clean_name] = {
-                    "registered": True,
-                    "coins": 300,
-                    "skins": [
-                        "🏔️ Penjelajah Gunung Standard", 
-                        "🥾 Pendaki Pemula Cepat", 
-                        "🧭 Ahli Kompas Alam"
-                    ]
-                }
-                save_users(users)
-                st.success(f"🎉 Akun '{clean_name}' berhasil dibuat (+300 Koin Bonus & 3 Skin Gratis)! Silakan Login.")
+            if st.button("➕ DAFTAR AKUN BARU", key="btn_reg_submit", use_container_width=True):
+                users = get_users()
+                clean_name = reg_username.strip()
+                if not clean_name:
+                    st.error("⚠️ Nama tidak boleh kosong!")
+                elif clean_name in users:
+                    st.warning("⚠️ Nama ini sudah terdaftar! Silakan langsung Login.")
+                else:
+                    users[clean_name] = {
+                        "registered": True,
+                        "coins": 300,
+                        "skins": [
+                            "🏔️ Penjelajah Gunung Standard", 
+                            "🥾 Pendaki Pemula Cepat", 
+                            "🧭 Ahli Kompas Alam"
+                        ]
+                    }
+                    save_users(users)
+                    st.success(f"🎉 Akun '{clean_name}' berhasil dibuat! Silakan pindah ke tab 'Masuk (Login)'.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     with auth_tab3:
         st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 25px; font-weight: 800;'>📌 Informasi Detail Projek</h2>", unsafe_allow_html=True)
