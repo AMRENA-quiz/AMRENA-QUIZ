@@ -39,8 +39,8 @@ st.markdown("""
         gap: 15px;
         background: rgba(15, 23, 42, 0.7);
         backdrop-filter: blur(10px);
-        padding: 10px 20px;
-        border-radius: 12px;
+        padding: 12px 25px;
+        border-radius: 16px;
         border: 1px solid rgba(56, 189, 248, 0.3);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         margin-bottom: 20px;
@@ -49,14 +49,14 @@ st.markdown("""
     .user-badge {
         font-weight: 700;
         color: #38bdf8;
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .coin-badge {
         background: rgba(245, 158, 11, 0.2);
         border: 1px solid #f59e0b;
         color: #fbbf24;
-        padding: 4px 12px;
+        padding: 6px 14px;
         border-radius: 20px;
         font-weight: 700;
         font-size: 14px;
@@ -325,7 +325,7 @@ if "newly_created_pin" not in st.session_state:
     st.session_state.newly_created_pin = None
 
 # ==========================================
-# HEADER KANAN ATAS (JIKA SUDAH LOGIN)
+# Kotak Top Bar Profile (DI DALAM KOTAK TRANSPARAN)
 # ==========================================
 if st.session_state.logged_user:
     users_data = get_users()
@@ -333,6 +333,7 @@ if st.session_state.logged_user:
     user_info = users_data.get(st.session_state.logged_user, {})
     total_coins = user_info.get("coins", 0)
     
+    # Render persis di dalam container dengan styling top-bar-container
     st.markdown(f"""
         <div class='top-bar-container'>
             <span class='user-badge'>👤 {st.session_state.logged_user}</span>
@@ -350,7 +351,6 @@ if st.session_state.logged_user is None:
     auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Masuk (Login)", "📝 Daftar Nama Baru", "📌 Informasi Projek"])
 
     with auth_tab1:
-        # Kotak Form Transparan (Auth Card) dibungkus langsung di dalam tab
         st.markdown("<div class='auth-card' style='max-width: 500px;'>", unsafe_allow_html=True)
         st.markdown("<h2 style='color: #ffffff; font-size: 24px; margin-bottom: 20px;'>Masuk dengan Nama Terdaftar</h2>", unsafe_allow_html=True)
         
